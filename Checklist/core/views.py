@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from .models import *
-from .serializers import CheckListSerializer
+#from .serializers import CheckListSerializer
 from .serializers import CheckListItemsSerializer
 
 # Create your views here.
@@ -16,6 +16,7 @@ class TestApiViews(APIView):
     def get(self, request, format=None):
         return Response({'Name': 'Shreya Panchal'})
 
+'''
 class ChecklistsApiViews(APIView):
     serializer_class =CheckListSerializer
     permission_classes = [IsAuthenticated,]
@@ -66,7 +67,7 @@ class ChecklistApiViews(APIView):
         checklist.delete()
         return Response(status= status.HTTP_204_NO_CONTENT)
 
-
+'''
 
 class ChecklistItemsCreateApiViews(APIView):
     serializer_class = CheckListItemsSerializer
