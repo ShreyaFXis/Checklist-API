@@ -6,7 +6,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from .models import *
-#from .serializers import CheckListSerializer
+from core.permissions import isOwner
+from .serializers import CheckListSerializer
 from .serializers import CheckListItemsSerializer
 
 # Create your views here.
@@ -16,12 +17,12 @@ class TestApiViews(APIView):
     def get(self, request, format=None):
         return Response({'Name': 'Shreya Panchal'})
 
-'''
+
 class ChecklistsApiViews(APIView):
-    serializer_class =CheckListSerializer
-    permission_classes = [IsAuthenticated,]
+    serializer_class = CheckListSerializer
+    permission_classes = [IsAuthenticated, isOwner]
     def get(self, request, format=None):
-        data = CheckList.objects.all()
+        data = CheckList.objects.filter(user = request.user)
 
         serializer = self.serializer_class(data, many = True)
 
@@ -30,7 +31,7 @@ class ChecklistsApiViews(APIView):
 
     def post(self, request, format=None):
         # creation code
-        serializer = self.serializer_class(data = request.data)
+        serializer = self.serializer_class(data = request.data, context = {'request':request})
         if serializer.is_valid():
             serializer.save()
             serialized_data = serializer.data
@@ -40,10 +41,13 @@ class ChecklistsApiViews(APIView):
 # class to check single id of checklist
 class ChecklistApiViews(APIView):
     serializer_class = CheckListSerializer
+    permission_classes = [IsAuthenticated, isOwner]
 
     def get_obj(self,pk):
         try:
-            return CheckList.objects.get(pk = pk)
+            obj = CheckList.objects.get(pk = pk)
+            self.check_object_permissions(self.request,obj)
+            return obj
         except:
             raise Http404
 
@@ -55,7 +59,7 @@ class ChecklistApiViews(APIView):
 
     def put(self,request,pk, format = None):
         checklist = self.get_obj(pk)
-        serializer = self.serializer_class(checklist, data =request.data)
+        serializer = self.serializer_class(checklist, data =request.data, context = {'request':request})
         if serializer.is_valid():
             serializer.save()
             serialized_data = serializer.data
@@ -67,14 +71,15 @@ class ChecklistApiViews(APIView):
         checklist.delete()
         return Response(status= status.HTTP_204_NO_CONTENT)
 
-'''
+
 
 class ChecklistItemsCreateApiViews(APIView):
     serializer_class = CheckListItemsSerializer
+    permission_classes = [IsAuthenticated, isOwner  ]
 
     def post(self, request, format=None):
         # creation code
-        serializer = self.serializer_class(data = request.data)
+        serializer = self.serializer_class(data = request.data, context = {'request':request})
         if serializer.is_valid():
             serializer.save()
             serialized_data = serializer.data
@@ -83,9 +88,13 @@ class ChecklistItemsCreateApiViews(APIView):
 
 class ChecklistItemsApiViews(APIView):
     serializer_class = CheckListItemsSerializer
+    permission_classes = [IsAuthenticated, isOwner]
+
     def get_obj(self,pk):
         try:
-            return CheckListItems.objects.get(pk = pk)
+            obj = CheckListItems.objects.get(pk = pk)
+            self.check_object_permissions(self.request, obj)
+            return obj
         except:
             raise Http404
 
@@ -98,7 +107,7 @@ class ChecklistItemsApiViews(APIView):
 
     def put(self,request,pk, format = None):
         checklist_item = self.get_obj(pk)
-        serializer = self.serializer_class(checklist_item, data =request.data)
+        serializer = self.serializer_class(checklist_item, data =request.data, context = {'request':request})
         if serializer.is_valid():
             serializer.save()
             serialized_data = serializer.data

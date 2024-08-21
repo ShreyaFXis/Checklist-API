@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('', include('accounts.urls')),
-    path('', include('list.urls')),
+
 
 
     path('openapi', get_schema_view(

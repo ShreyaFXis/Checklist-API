@@ -10,14 +10,15 @@ class CheckListSerializer(serializers.Serializer):
 
 
 class CheckListItemsSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = CheckListItems
         fields = '__all__'
 
-'''
+
 class CheckListSerializer(serializers.ModelSerializer):
     items = CheckListItemsSerializer(source ='checklistitems_set', many = True, read_only = True)
+    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
     class Meta:
         model = CheckList
         fields = '__all__'
-'''
