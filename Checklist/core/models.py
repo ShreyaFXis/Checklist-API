@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 # Create your models here.
-User = get_user_model()
+#User = get_user_model()
 
 class CheckList(models.Model):
     title = models.CharField(max_length=100)
@@ -9,7 +9,7 @@ class CheckList(models.Model):
     is_archived = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -20,7 +20,7 @@ class CheckListItems(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     checklist = models.ForeignKey(CheckList, related_name='checklistitems_set', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.text

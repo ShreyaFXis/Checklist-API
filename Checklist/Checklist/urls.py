@@ -22,13 +22,12 @@ from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
-    path('', include('accounts.urls')),
+    path('api/', include('core.urls')),
+    path('api/', include('accounts.urls')),
 
 
-
-    path('openapi', get_schema_view(
-        title="Your Project",
+    path('openapi/', get_schema_view(
+        title="CheckList API",
         description="API for all things …",
         version="1.0.0"
     ), name='openapi-schema'),
