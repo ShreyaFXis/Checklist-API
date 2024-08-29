@@ -5,11 +5,12 @@ from django.urls import path
 urlpatterns = [
 
     path('',TestApiViews.as_view()),
-    path('checklists', ChecklistsApiViews.as_view()),
-    path('checklist/<int:pk>', ChecklistApiViews.as_view()),
-    path('checklist-items/create',ChecklistItemsCreateApiViews.as_view()),
-    path('checklist-item/<int:pk>',ChecklistItemsApiViews.as_view()),
+    path('checklists', ChecklistsApiViews.as_view()), #to get and create checklists
+    path('checklists/<int:pk>', ChecklistApiViews.as_view()),  #for Retrieve/Update/Delete single checklist
+    path('checklists/items',ChecklistItemsCreateApiViews.as_view()), # to create new item
+    path('checklists/<int:checklist_id>/items/<int:pk>', ChecklistItemsApiViews.as_view()), #for Retrieve/Update/Delete single items
 
-    #api/checklists/12(checklist Id )/items/8(checklist items ID)
+
+    #api/checklists/{checklist Id}/items/{checklist items ID}
 
 ]

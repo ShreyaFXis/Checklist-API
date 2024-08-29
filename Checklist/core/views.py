@@ -104,12 +104,19 @@ class ChecklistItemsCreateApiViews(CreateAPIView):
 class ChecklistItemsApiViews(RetrieveUpdateDestroyAPIView):
     serializer_class = CheckListItemsSerializer
     permission_classes = [IsAuthenticated, isOwner]
-    '''Retrive, Update, Delete'''
+    '''Retrieve, Update, Delete'''
 
     def get_queryset(self):
-        # Return the filtered queryset directly
-        return CheckListItems.objects.filter(user=self.request.user)
+        # Retrieve the checklist_id and checklist_item_id from the URL
+        checklist_id = self.kwargs.get('checklist_id')
+        checklist_item_id = self.kwargs.get('pk')  # assuming pk is for checklist_item_id
 
+        # Filter based on user, checklist_id, and checklist_item_id
+        return CheckListItems.objects.filter(
+            user=self.request.user,
+            checklist_id=checklist_id,
+            id=checklist_item_id
+        )
 '''
    def get_obj(self,pk):
         try:
