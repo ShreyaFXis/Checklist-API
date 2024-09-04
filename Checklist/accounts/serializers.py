@@ -13,7 +13,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'password',
-            'password2'
+            'password2',
+            'profile_photo',
+            'gender',
+            'phone_number'
+
         ]
         extra_kwargs ={
             'password': {'write_only': True},
@@ -25,10 +29,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         email = validated_data.get('email')
         password = validated_data.get('password')
         password2 = validated_data.get('password2')
+        profile_photo = validated_data.get('profile_photo')
+        gender = validated_data.get('gender')
+        phone_number = validated_data.get('phone_number')
 
 
         if password == password2:
-            user = User(username=username, email=email)
+            #user = User(username=username, email=email)
+            user = User(username=username, email=email, profile_photo=profile_photo, gender=gender,
+                        phone_number=phone_number)
             user.set_password(password)
             user.save()
             return user
