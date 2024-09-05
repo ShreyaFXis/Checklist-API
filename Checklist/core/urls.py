@@ -10,7 +10,6 @@ urlpatterns = [
     path('checklists/items',ChecklistItemsCreateApiViews.as_view()), # to create new item
     path('checklists/<int:checklist_id>/items/<int:pk>', ChecklistItemsApiViews.as_view()), #for Retrieve/Update/Delete single items
 
-
     #api/checklists/{checklist Id}/items/{checklist items ID}
 
 ]

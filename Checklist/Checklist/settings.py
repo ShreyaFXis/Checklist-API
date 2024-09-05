@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
 ]
 
+
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -82,10 +84,15 @@ WSGI_APPLICATION = 'Checklist.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'checklistapi',   # database name
+        'USER': 'root',           # Default MySQL user in XAMPP
+        'PASSWORD': '',           # Default password for 'root' is usually empty
+        'HOST': '127.0.0.1',      # XAMPP MySQL server is on localhost
+        'PORT': '3306',           # Default MySQL port
     }
 }
+
 
 
 # Password validation
