@@ -19,6 +19,8 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
+        if 'phone_number' not in extra_fields:
+            extra_fields['phone_number'] = ''
 
         return self.create_user(email, username, password, **extra_fields)
 
@@ -33,7 +35,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    phone_number = models.CharField(max_length=20, unique=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
