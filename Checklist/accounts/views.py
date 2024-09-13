@@ -8,6 +8,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.serializers import UserRegisterSerializer
 
 # Create your views here.
+from rest_framework_simplejwt.views import TokenObtainPairView
+from accounts.serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class RegisterAPIViews(APIView):
     serializer_class = UserRegisterSerializer
