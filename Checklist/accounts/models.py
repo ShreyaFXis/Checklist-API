@@ -1,5 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import os
+from django.conf import settings
+
+def user_profile_photo_path(instance, filename):
+    # Store the profile photos under accounts/profile_photos/ inside the accounts app
+    return os.path.join('accounts/profile_photos/', filename)
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -33,7 +39,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
-    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    profile_photo = models.ImageField(upload_to=user_profile_photo_path, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
