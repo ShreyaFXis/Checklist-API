@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import os
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 def user_profile_photo_path(instance, filename):
     # Store the profile photos under accounts/profile_photos/ inside the accounts app
@@ -47,10 +49,26 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    reset_token = models.CharField(max_length=255, blank=True, null=True)
+    reset_token_expiry = models.DateTimeField(blank=True, null=True)
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+    def generate_reset_token(self):
+        import uuid
+        token = str(uuid.uuid4())
+        self.reset_token = token
+        self.reset_token_expiry = timezone.now() + timedelta(minutes=10)  # Token valid for 10 minutes
+        self.save()
+        return token
+
+    def reset_token_is_valid(self, token):
+        if self.reset_token == token and self.reset_token_expiry > timezone.now():
+            return True
+        return False
 
     def __str__(self):
         return self.username

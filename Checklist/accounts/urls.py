@@ -14,10 +14,13 @@ urlpatterns = [
 
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from accounts.views import RegisterAPIViews, CustomTokenObtainPairView
+from accounts.views import RegisterAPIViews, CustomTokenObtainPairView,PasswordResetRequestView,PasswordResetConfirmView
 
 urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='login_view'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh_view'),
     path('register/', RegisterAPIViews.as_view(), name='register_view'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
+    path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
 ]

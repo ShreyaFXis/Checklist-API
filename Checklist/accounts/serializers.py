@@ -51,6 +51,9 @@ from rest_framework import serializers
 from accounts.models import CustomUser  # Proper import for CustomUser model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -98,5 +101,67 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             gender=validated_data.get('gender'),
             phone_number=validated_data.get('phone_number')
         )
+
+        return user
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = CustomUser.objects.get(email=value)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"email": "User not found"})
+        return value
+
+    def save(self):
+        email = self.validated_data['email']
+        user = CustomUser.objects.get(email=email)
+
+        # Generate reset token and save it to the user
+        token = user.generate_reset_token()
+
+        # Generate reset link
+        reset_link = f"{settings.FRONTEND_URL}/password-reset-confirm/?token={token}&email={email}"
+
+        # Send email (modify according to your email service)
+        send_mail(
+            'Password Reset',
+            f'Click the link to reset your password: {reset_link}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+        return data
+
+    def save(self):
+        email = self.validated_data['email']
+        token = self.validated_data['token']
+        new_password = self.validated_data['new_password']
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"email": "User not found"})
+
+        # Check if the token is valid
+        if not user.reset_token_is_valid(token):
+            raise serializers.ValidationError({"token": "Invalid or expired token"})
+
+        # Set the new password and clear the token
+        user.set_password(new_password)
+        user.reset_token = None
+        user.reset_token_expiry = None
+        user.save()
 
         return user
