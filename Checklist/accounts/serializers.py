@@ -121,15 +121,16 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         # Generate reset token and save it to the user
         token = user.generate_reset_token()
 
-        # Generate reset link
+        # Generate reset link (using frontend URL)
         reset_link = f"{settings.FRONTEND_URL}/password-reset-confirm/?token={token}&email={email}"
 
-        # Send email (modify according to your email service)
+        # Send email with reset link
         send_mail(
-            'Password Reset',
-            f'Click the link to reset your password: {reset_link}',
+            'Password Reset Request',
+            f'Click the link to reset your password: {reset_link} \n Token : {token}',
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
+            fail_silently=False,
         )
 
 

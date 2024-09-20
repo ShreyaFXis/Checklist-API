@@ -56,10 +56,23 @@ class PasswordResetRequestView(APIView):
             return Response({"message": "Password reset link sent"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 # Exempt CSRF check for Password Reset Confirm
 @method_decorator(csrf_exempt, name='dispatch')
 class PasswordResetConfirmView(APIView):
+    def get(self, request):
+        email = request.query_params.get('email')
+        token = request.query_params.get('token')
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Validate the token
+        if user.reset_token_is_valid(token):
+            return Response({"message": "Token is valid"}, status=status.HTTP_200_OK)
+        return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         if serializer.is_valid():

@@ -42,12 +42,21 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
 ]
 
+# Email Settings for Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'panchalshreya002@gmail.com'  # Replace with your actual email
+EMAIL_HOST_PASSWORD = 'xpcr bint ojek ctov'  # Gmail App Password, not your regular Gmail password
+
+# FRONTEND URL for Reset Link
+FRONTEND_URL = 'http://localhost:8000'  # Update to your frontend's actual URL
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # The email address to send from
+
+
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
-
-FRONTEND_URL = 'http://localhost:8000'
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
