@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="src/style.css" />
+    <script>
+      function GetURLParameter(sParam) {
+        var sPageURL = window.location.search.substring(1);
+        console.log(sPageURL);
+        var sURLVariables = sPageURL.split("&");
+        for (var i = 0; i < sURLVariables.length; i++) {
+          var sParameterName = sURLVariables[i].split("=");
+          if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+          }
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Reset Password</h1>
+    <form method="POST" action="/api/password-reset-confirm">
+      <input type="password" name="new_password" required />
+      <input type="text" name="confirm_password" required />
+      <input type="hidden" value="" name="token" id="tokenbox" />
+      <input type="hidden" value="" name="email" id="emailBox" />
+      <input type="submit" name="submit" />
+    </form>
+    <script>
+      document.getElementById("tokenbox").value = GetURLParameter("token");
+      document.getElementById("emailBox").value = GetURLParameter("email");
+    </script>
+  </body>
+</html>
