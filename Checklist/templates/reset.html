@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="src/style.css" />
+    
     <script>
       function GetURLParameter(sParam) {
         var sPageURL = window.location.search.substring(1);
@@ -21,15 +22,23 @@
   <body>
     <h1>Reset Password</h1>
     <form method="POST" action="/api/password-reset-confirm">
+      New Password:
       <input type="password" name="new_password" required />
+      <br />
+      <br />
+      Confirm Password:
       <input type="text" name="confirm_password" required />
       <input type="hidden" value="" name="token" id="tokenbox" />
       <input type="hidden" value="" name="email" id="emailBox" />
+      <br />
+      <br />
       <input type="submit" name="submit" />
     </form>
+
     <script>
       document.getElementById("tokenbox").value = GetURLParameter("token");
       document.getElementById("emailBox").value = GetURLParameter("email");
     </script>
+    
   </body>
 </html>
