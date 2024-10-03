@@ -40,7 +40,7 @@ urlpatterns = [
         extra_context={'schema_url':'openapi-schema'}
     ), name='api_doc'),
 
-    path('password-reset-confirm', TemplateView.as_view(
+    path('confirm-forget-password', TemplateView.as_view(
         template_name='reset.html',
         extra_context={'schema_url':'openapi-schema'}
     ), name='api_doc'),
