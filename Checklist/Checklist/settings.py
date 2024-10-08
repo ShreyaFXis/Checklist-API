@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'core.apps.CoreConfig',
     'accounts.apps.AccountsConfig',
+
+    'corsheaders',
 ]
 
 # Email Settings for Gmail
@@ -59,7 +61,7 @@ EMAIL_HOST_USER = 'panchalshreya002@gmail.com'  # Replace with your actual email
 EMAIL_HOST_PASSWORD = 'xpcr bint ojek ctov'  # Gmail App Password, not your regular Gmail password
 
 # FRONTEND URL for Reset Link
-FRONTEND_URL = 'http://localhost:8000'  # Update to your frontend's actual URL
+FRONTEND_URL = 'http://localhost:3000'  # Update to your frontend's actual URL
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # The email address to send from
 
 
@@ -74,6 +76,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'Checklist.urls'
@@ -175,3 +179,5 @@ SIMPLE_JWT = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 '''
+
+CORS_ALLOW_ALL_ORIGINS = True

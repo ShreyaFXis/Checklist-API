@@ -57,7 +57,7 @@ class ChecklistItemsApiViews(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         # Retrieve the checklist_id and checklist_item_id from the URL
         checklist_id = self.kwargs.get('checklist_id')
-        checklist_item_id = self.kwargs.get('pk')  # assuming pk is for checklist_item_id
+        checklist_item_id = self.kwargs.get('pk')  # pk is for checklist_item_id
 
         # Filter based on user, checklist_id, and checklist_item_id
         return CheckListItems.objects.filter(
