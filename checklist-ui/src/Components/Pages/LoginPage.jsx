@@ -8,8 +8,10 @@ import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import { useNavigate } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
-import axios from 'axios'; // Import Axios
-import { useState } from 'react'; // Import useState
+import axios from 'axios';
+import { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import toastify CSS
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -27,14 +29,35 @@ export default function LoginPage() {
       });
       // Handle successful login (e.g., save tokens, redirect)
       console.log('Login successful:', response.data);
+
+      // Show success toast
+      toast.success('Login successful!', {
+        position: 'top-center',
+        autoClose: 2000, // Auto close after 2 seconds
+      });
+
       // Navigate to another page (e.g., dashboard) after successful login
-      navigate('/dashboard');
+      setTimeout(() => {
+        navigate('/');
+      }, 2000); // Delay navigation for toast to show
     } catch (error) {
       // Handle error and display a message
       if (error.response && error.response.data) {
         setErrorMessage(error.response.data.error); // Display backend error message
+
+        // Show error toast
+        toast.error(error.response.data.error, {
+          position: 'top-center',
+          autoClose: 3000, // Auto close after 3 seconds
+        });
       } else {
         setErrorMessage('Login failed. Please try again.');
+
+        // Show generic error toast
+        toast.error('Login failed. Please try again.', {
+          position: 'top-center',
+          autoClose: 3000,
+        });
       }
     }
   };
@@ -103,6 +126,18 @@ export default function LoginPage() {
                 sx={{ width: '120%', minWidth: '250px' }}
               />
 
+              {/* Forget Password Link */}
+              <Link
+                component="button"
+                variant="body3"
+                onClick={() => {
+                  navigate('/forget-password');
+                }}
+                sx={{ mt: -5, textAlign: 'left', alignSelf: 'flex-end' }}
+              >
+                Forget Password?
+              </Link>
+
               {/* Error Message Display */}
               {errorMessage && (
                 <Typography color="error" sx={{ mt: -5 }}>
@@ -114,18 +149,6 @@ export default function LoginPage() {
               <Button variant="outlined" color="#A0937D" onClick={handleLogin}>
                 Login
               </Button>
-
-              {/* Forget Password Link */}
-              <Link
-                component="button"
-                variant="body3"
-                onClick={() => {
-                  navigate('/forgetpass');
-                }}
-                sx={{ mt: -5, textAlign: 'left', alignSelf: 'flex-end' }}
-              >
-                Forget Password?
-              </Link>
 
               {/* Register Link */}
               <Link
@@ -142,6 +165,9 @@ export default function LoginPage() {
           </Box>
         </Box>
       </Container>
+
+      {/* Toast Container */}
+      <ToastContainer />
     </React.Fragment>
   );
 }

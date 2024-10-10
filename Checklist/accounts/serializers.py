@@ -123,7 +123,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         token = user.generate_reset_token()
 
         # Generate reset link (using frontend URL)
-        reset_link = f"{settings.FRONTEND_URL}/confirm-forget-password?token={token}&email={email}"
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={email}"
 
 
 

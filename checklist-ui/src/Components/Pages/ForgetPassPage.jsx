@@ -8,11 +8,11 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ForgetPassPage() {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -26,17 +26,17 @@ export default function ForgetPassPage() {
 
       // Handle successful response
       if (response.status === 200) {
-        setSuccess("Password reset link sent to your email.");
-        setError('');  // Clear any previous errors
+        toast.success("Password reset link sent to your email.");
       }
     } catch (err) {
       // Handle errors
-      setError("An error occurred. Please check your email address.");
+      toast.error("An error occurred. Please check your email address.");
     }
   };
 
   return (
     <React.Fragment>
+      <ToastContainer /> {/* Add ToastContainer for toasts */}
       <CssBaseline />
       <Typography 
         variant="h4" 
@@ -47,7 +47,7 @@ export default function ForgetPassPage() {
           mb: 2 
         }}
       >
-        Reset Your Password
+        
       </Typography>
 
       <Container maxWidth="sm">
@@ -90,9 +90,6 @@ export default function ForgetPassPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-
-                {error && <Typography color="error">{error}</Typography>}
-                {success && <Typography color="green">{success}</Typography>}
 
                 <Button variant="contained" type="submit" sx={{ mt: 2 }}>Send Reset Link</Button>
               </Box>

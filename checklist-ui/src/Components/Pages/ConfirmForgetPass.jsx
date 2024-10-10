@@ -47,7 +47,7 @@ export default function ConfirmForgetPass() {
       if (response.status === 200) {
         toast.success("Password reset successful. Redirecting to login...");
         setTimeout(() => {
-          navigate('/');
+          navigate('/login');
         }, 3000); // Redirect to login page after 3 seconds
       }
     } catch (err) {
@@ -114,7 +114,10 @@ export default function ConfirmForgetPass() {
                   placeholder="Enter new password"
                   sx={{ width: '100%', minWidth: '250px' }}
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (error) setError('');
+                  }}
                 />
 
                 <TextField
@@ -125,7 +128,10 @@ export default function ConfirmForgetPass() {
                   placeholder="Re-enter new password"
                   sx={{ width: '100%', minWidth: '250px' }}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (error) setError('');
+                  }}
                 />
 
                 {error && <Typography color="error">{error}</Typography>}

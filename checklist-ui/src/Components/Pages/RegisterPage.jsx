@@ -14,6 +14,8 @@ import FormLabel from '@mui/material/FormLabel';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios'; // Import Axios
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const RegistrationPage = () => {
   const [gender, setGender] = useState('');
@@ -38,6 +40,7 @@ const RegistrationPage = () => {
   const handleRegister = async () => {
     if (password !== confirm_password) {
       setErrorMessage("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
@@ -46,7 +49,7 @@ const RegistrationPage = () => {
     formData.append('username', username);
     formData.append('email', email);
     formData.append('password', password);
-    formData.append('confirm_password',confirm_password);
+    formData.append('confirm_password', confirm_password); // Fix typo
     formData.append('gender', gender);
     formData.append('phone_number', phoneNumber);
     if (profilePhoto) {
@@ -54,158 +57,159 @@ const RegistrationPage = () => {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/register', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      // On successful registration, navigate to the login page
-      console.log('Registration successful:', response.data);
-      navigate('/');
-
+      const response = await axios.post('http://127.0.0.1:8000/api/register', formData);
+      toast.success("Registration successful!");
+      setTimeout(() => {
+        navigate('/login'); // Redirect after a short delay
+      }, 2000);
     } catch (error) {
-      // Handle registration errors and display them
+      console.log("Error:", error); // Log the full error
       if (error.response && error.response.data) {
-        setErrorMessage(error.response.data.error); // Display backend error message
+        console.log("Error Response Data:", error.response.data); // Log the error data
+        setErrorMessage(error.response.data.error);
+        toast.error(error.response.data.error);
       } else {
         setErrorMessage('Registration failed. Please try again.');
+        toast.error('Registration failed. Please try again.');
       }
     }
   };
 
   return (
-    <React.Fragment>
-      <CssBaseline />
-      <Container maxWidth="sm" sx={{ mt: 4 }}>
-        <Typography variant="h3" color="#1a1713" sx={{ fontFamily: 'Roboto', textAlign: 'center', mb: 2 }}>
-          Register
-        </Typography>
-        <Box
-          sx={{
-            bgcolor: '#F6E6CB',
-            padding: 4,
-            borderRadius: 2,
-            boxShadow: 3,
-          }}
-        >
+    <>
+      <ToastContainer />
+      <React.Fragment>
+        <CssBaseline />
+        <Container maxWidth="sm" sx={{ mt: 4 }}>
+          <Typography variant="h3" color="#1a1713" sx={{ fontFamily: 'Roboto', textAlign: 'center', mb: 2 }}>
+            Register
+          </Typography>
           <Box
-            component={Paper}
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 3,
-              alignItems: 'center',
+              bgcolor: '#F6E6CB',
+              padding: 4,
               borderRadius: 2,
-              p: 2,
+              boxShadow: 3,
             }}
           >
-            <TextField
-              color="#A0937D"
-              type="file"
-              name="profilePhoto"
-              fullWidth
-              margin="normal"
-              inputProps={{ accept: 'image/*' }}
-              onChange={handleProfilePhotoChange} // Handle profile photo change
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              required
-              color="#A0937D"
-              name="username"
-              label="Username"
-              fullWidth
-              margin="normal"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              required
-              color="#A0937D"
-              name="email"
-              label="Email"
-              type="email"
-              fullWidth
-              margin="normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              required
-              color="#A0937D"
-              name="phoneNumber"
-              label="Phone Number"
-              type="tel"
-              fullWidth
-              margin="normal"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-            />
-            <TextField
-              required
-              color="#A0937D"
-              name="password"
-              label="Password"
-              type="password"
-              fullWidth
-              margin="normal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <TextField
-              required
-              color="#A0937D"
-              name="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              fullWidth
-              margin="normal"
-              value={confirm_password}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-
-            {/* Error message display */}
-            {errorMessage && (
-              <Typography color="error" sx={{ mt: 1 }}>
-                {errorMessage}
-              </Typography>
-            )}
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-              <FormLabel component="legend" sx={{ mb: 1 }}>Gender</FormLabel>
-              <RadioGroup
-                color="#A0937D"
-                aria-label="gender"
-                name="gender"
-                value={gender}
-                onChange={handleGenderChange}
-                sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}
-              >
-                <FormControlLabel value="female" control={<Radio />} label="Female" />
-                <FormControlLabel value="male" control={<Radio />} label="Male" />
-                <FormControlLabel value="other" control={<Radio />} label="Other" />
-              </RadioGroup>
-            </Box>
-
-            <Button variant="outlined" color="#A0937D" onClick={handleRegister}>
-              Register
-            </Button>
-
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => {
-                navigate('/'); // Navigate to login page
+            <Box
+              component={Paper}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                alignItems: 'center',
+                borderRadius: 2,
+                p: 2,
               }}
-              sx={{ mt: -2 }}
             >
-              Already have an account? Login here!
-            </Link>
+              <TextField
+                color="#A0937D"
+                type="file"
+                name="profilePhoto"
+                fullWidth
+                margin="normal"
+                inputProps={{ accept: 'image/*' }}
+                onChange={handleProfilePhotoChange} // Handle profile photo change
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                required
+                color="#A0937D"
+                name="username"
+                label="Username"
+                fullWidth
+                margin="normal"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                required
+                color="#A0937D"
+                name="email"
+                label="Email"
+                type="email"
+                fullWidth
+                margin="normal"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <TextField
+                required
+                color="#A0937D"
+                name="phoneNumber"
+                label="Phone Number"
+                type="tel"
+                fullWidth
+                margin="normal"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+              <TextField
+                required
+                color="#A0937D"
+                name="password"
+                label="Password"
+                type="password"
+                fullWidth
+                margin="normal"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <TextField
+                required
+                color="#A0937D"
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                fullWidth
+                margin="normal"
+                value={confirm_password}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+
+              {/* Error message display */}
+              {errorMessage && (
+                <Typography color="error" sx={{ mt: 1 }}>
+                  {errorMessage}
+                </Typography>
+              )}
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+                <FormLabel component="legend" sx={{ mb: 1 }}>Gender</FormLabel>
+                <RadioGroup
+                  color="#A0937D"
+                  aria-label="gender"
+                  name="gender"
+                  value={gender}
+                  onChange={handleGenderChange}
+                  sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}
+                >
+                  <FormControlLabel value="female" control={<Radio />} label="Female" />
+                  <FormControlLabel value="male" control={<Radio />} label="Male" />
+                  <FormControlLabel value="other" control={<Radio />} label="Other" />
+                </RadioGroup>
+              </Box>
+
+              <Button variant="outlined" sx={{ color: "#A0937D", borderColor: "#A0937D" }} onClick={handleRegister}>
+                Register
+              </Button>
+
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => {
+                  navigate('/login'); // Navigate to login page
+                }}
+                sx={{ mt: -2 }}
+              >
+                Already have an account? Login here!
+              </Link>
+            </Box>
           </Box>
-        </Box>
-      </Container>
-    </React.Fragment>
+        </Container>
+      </React.Fragment>
+    </>
   );
 };
 
