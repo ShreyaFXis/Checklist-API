@@ -27,8 +27,14 @@ export default function LoginPage() {
         email: email,
         password: password,
       });
+      
       // Handle successful login (e.g., save tokens, redirect)
-      console.log('Login successful:', response.data);
+      const token = response.data.access; // Assuming JWT token is in 'access'
+      console.log('Login successful:', token);
+
+      // Save token to localStorage
+      localStorage.setItem('token', token);
+      console.log({token});
 
       // Show success toast
       toast.success('Login successful!', {
@@ -75,7 +81,7 @@ export default function LoginPage() {
       <Container maxWidth="sm">
         <Box
           sx={{
-            bgcolor: '#F6E6CB',
+            bgcolor: '#EFEFEF', // Changed background color to light beige
             padding: 4,
             borderRadius: 2,
             boxShadow: 3,
@@ -104,26 +110,26 @@ export default function LoginPage() {
               {/* Email Input */}
               <TextField
                 required
-                color="#A0937D"
+                color="primary"
                 id="email"
                 label="Email"
                 placeholder="abc@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                sx={{ width: '120%', minWidth: '250px' }}
+                sx={{ width: '100%', minWidth: '250px' }}
               />
 
               {/* Password Input */}
               <TextField
                 required
-                color="#A0937D"
+                color="primary"
                 id="password"
                 label="Password"
                 type="password"
                 placeholder="****"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                sx={{ width: '120%', minWidth: '250px' }}
+                sx={{ width: '100%', minWidth: '250px' }}
               />
 
               {/* Forget Password Link */}
@@ -146,7 +152,7 @@ export default function LoginPage() {
               )}
 
               {/* Login Button */}
-              <Button variant="outlined" color="#A0937D" onClick={handleLogin}>
+              <Button variant="contained" color="primary" onClick={handleLogin}>
                 Login
               </Button>
 

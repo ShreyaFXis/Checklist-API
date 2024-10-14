@@ -53,7 +53,7 @@ export default function ForgetPassPage() {
       <Container maxWidth="sm">
         <Box
           sx={{
-            bgcolor: '#F6E6CB',
+            bgcolor: '#EFEFEF',
             padding: 4,
             borderRadius: 2,
             boxShadow: 3,

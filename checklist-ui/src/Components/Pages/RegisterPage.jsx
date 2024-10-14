@@ -86,7 +86,7 @@ const RegistrationPage = () => {
           </Typography>
           <Box
             sx={{
-              bgcolor: '#F6E6CB',
+              bgcolor: '#EFEFEF', // Changed background color to light beige
               padding: 4,
               borderRadius: 2,
               boxShadow: 3,

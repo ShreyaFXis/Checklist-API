@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, TextField, Button, Avatar, IconButton, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, TextField, Avatar, IconButton, Menu, MenuItem, Box } from '@mui/material';
 import Sidebar from './Sidebar';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import MenuIcon from '@mui/icons-material/Menu';
+import avt1 from '../../Components/Assests/avt1.png';
 
-// Create a custom theme with Roboto and custom colors
 const theme = createTheme({
   typography: {
     fontFamily: 'Roboto, sans-serif',
@@ -20,31 +21,47 @@ const theme = createTheme({
 });
 
 const DashboardLayout = () => {
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const handleAvatarClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ display: 'flex' }}>
-        {/* Add margin-top to AppBar */}
         <AppBar
           position="fixed"
           sx={{
             zIndex: 1201,
-            bgcolor: '#F6E6CB',
+            bgcolor: '#f4f4f4',
             color: '#2b2213',
-            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', // subtle shadow for elevation
+            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
             padding: '0 20px',
-            borderRadius: '20px 20px 20px 20px', // Curved edges for header
-            width: `calc(100% - 240px)`, // Adjust width to fit outside the sidebar
-            ml: '250px', // Margin to prevent overlap with the drawer
-            mt: '10px', // Add space above the AppBar
-            
+            width: `calc(100% - ${drawerOpen ? '240px' : '0px'})`,
+            ml: `${drawerOpen ? '240px' : '0px'}`,
+            mt: '0',  // Removed top margin
+            borderRadius: '0px',  // Removed border radius
           }}
         >
           <Toolbar sx={{ justifyContent: 'space-between' }}>
+            <IconButton color="inherit" aria-label="open drawer" onClick={toggleDrawer} edge="start">
+              <MenuIcon />
+            </IconButton>
             <Typography variant="h6" component="div">
               Checklist API
             </Typography>
 
-            {/* Search and Profile Section */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <TextField
                 variant="outlined"
@@ -57,23 +74,29 @@ const DashboardLayout = () => {
                   borderRadius: '10px',
                 }}
               />
-              <IconButton sx={{ ml: 1 }}>
-                <Avatar alt="User" src="/static/images/avatar/1.jpg" />
+              <IconButton onClick={handleAvatarClick} sx={{ ml: 1 }}>
+                <Avatar alt="User" src={avt1} />
               </IconButton>
-              <Button color="inherit" sx={{ color: '#2b2213', ml: 2 }}>
-                Logout
-              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  style: {
+                    borderRadius: '10px',
+                  },
+                }}
+              >
+                <MenuItem onClick={handleMenuClose}>My Profile</MenuItem>
+                <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+              </Menu>
             </Box>
           </Toolbar>
         </AppBar>
 
-        {/* Sidebar with margin-top */}
-        <Sidebar />
+        <Sidebar open={drawerOpen} toggleDrawer={toggleDrawer} />
 
-        <Box
-          component="main"
-          sx={{ flexGrow: 1, p: 3, mt: 8 }}
-        >
+        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
           <Outlet />
         </Box>
       </Box>

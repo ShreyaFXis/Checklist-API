@@ -43,7 +43,6 @@ class ChecklistApiViews(RetrieveUpdateDestroyAPIView):
 
 
 
-
 class ChecklistItemsCreateApiViews(CreateAPIView):
     serializer_class = CheckListItemsSerializer
     permission_classes = [IsAuthenticated, isOwner ]
