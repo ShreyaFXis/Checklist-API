@@ -3,12 +3,7 @@ import Routees from './Components/Config/Routees';
 import {BrowserRouter as Router, useRoutes} from 'react-router-dom';
 
 const AppWrapper = () => {
-  let element = useRoutes([
-    {
-      path:'*',
-      element: <Routees />
-    }
-  ]);
+  let element = useRoutes(Routees);
   return element;
 };
 

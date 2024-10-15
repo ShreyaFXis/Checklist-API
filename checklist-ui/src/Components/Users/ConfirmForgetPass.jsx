@@ -55,7 +55,7 @@ export default function ConfirmForgetPass() {
   };
 
   return (
-   <AuthLayout>
+    <>
       <ToastContainer />
       <Typography 
         variant="h4" 
@@ -117,6 +117,6 @@ export default function ConfirmForgetPass() {
                 </Button>
               </Box>
           </form>
-    </AuthLayout>
+    </>
   );
 }

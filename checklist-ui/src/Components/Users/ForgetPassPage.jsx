@@ -34,7 +34,7 @@ export default function ForgetPassPage() {
   };
 
   return (
-   <AuthLayout>
+    <>
       <ToastContainer /> {/* Add ToastContainer for toasts */}
       
       <Typography 
@@ -74,6 +74,6 @@ export default function ForgetPassPage() {
                 <Button variant="contained" type="submit" sx={{ mt: 2 }}>Send Reset Link</Button>
               </Box>
             </form>
-        </AuthLayout>
+        </>
   );
 }

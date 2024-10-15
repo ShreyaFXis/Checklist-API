@@ -64,7 +64,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthLayout>
+      <>
       <Box
         display="flex"
         flexDirection="column"
@@ -167,6 +167,7 @@ export default function LoginPage() {
 
       {/* Toast Container */}
       <ToastContainer />
-    </AuthLayout>
+      </>
+     
   );
 }

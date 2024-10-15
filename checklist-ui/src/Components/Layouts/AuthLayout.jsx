@@ -5,6 +5,7 @@ import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Outlet } from 'react-router-dom';
 
 const AuthLayout = ({ children }) => {
   return (
@@ -21,7 +22,7 @@ const AuthLayout = ({ children }) => {
           }}
         >
           <Box component={Paper} sx={{ padding: 3 }}>
-            {children}
+            <Outlet/>
           </Box>
         </Box>
       </Container>

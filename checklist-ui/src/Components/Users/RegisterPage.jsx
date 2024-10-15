@@ -74,7 +74,7 @@ const RegistrationPage = () => {
 
   return (
     <>
-      <AuthLayout>
+      
         <ToastContainer />
 
         <Container maxWidth="sm" sx={{ mt: 4 }}>
@@ -204,7 +204,7 @@ const RegistrationPage = () => {
           </Link>
 
         </Container>
-      </AuthLayout>
+      
     </>
   );
 };
