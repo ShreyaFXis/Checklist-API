@@ -5,11 +5,10 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { Typography } from '@mui/material';
 import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Paper from '@mui/material/Paper';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AuthLayout from '../Layouts/AuthLayout';
 
 export default function ForgetPassPage() {
   const [email, setEmail] = useState('');
@@ -35,9 +34,9 @@ export default function ForgetPassPage() {
   };
 
   return (
-    <React.Fragment>
+   <AuthLayout>
       <ToastContainer /> {/* Add ToastContainer for toasts */}
-      <CssBaseline />
+      
       <Typography 
         variant="h4" 
         color="#1a1713" 
@@ -50,26 +49,7 @@ export default function ForgetPassPage() {
         
       </Typography>
 
-      <Container maxWidth="sm">
-        <Box
-          sx={{
-            bgcolor: '#EFEFEF',
-            padding: 4,
-            borderRadius: 2,
-            boxShadow: 3,
-          }}
-        >
-          <Box
-            component={Paper}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: 3,
-              borderRadius: 2,
-              padding: 3,
-            }}
-          >
+     
             <form onSubmit={handleSubmit}>
               <Box
                 sx={{
@@ -94,9 +74,6 @@ export default function ForgetPassPage() {
                 <Button variant="contained" type="submit" sx={{ mt: 2 }}>Send Reset Link</Button>
               </Box>
             </form>
-          </Box>
-        </Box>
-      </Container>
-    </React.Fragment>
+        </AuthLayout>
   );
 }

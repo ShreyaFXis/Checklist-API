@@ -1,15 +1,15 @@
 import React from "react"; 
 import { useRoutes } from "react-router-dom";
-import DashboardLayout from "./DashboardLayout";
-import DashboardPage from "./DashboardPage";
-import AboutPage from "./AboutPage";
-import ProductsPage from "./ProductsPage";
-import SettingsPage from "./SettingsPage";
-import LoginPage from "./LoginPage";
-import RegisterPage from "./RegisterPage";
-import ForgetPassPage from './ForgetPassPage';
-import ConfirmForgetPass from './ConfirmForgetPass';
-import Checklists from "./Check-lists";
+import DashboardLayout from "../Layouts/DashboardLayout";
+import DashboardPage from "../Pages/DashboardPage";
+import AboutPage from "../Pages/AboutPage";
+import ProductsPage from "../Pages/ProductsPage";
+import SettingsPage from "../Pages/SettingsPage";
+import LoginPage from "../Users/LoginPage";
+import RegisterPage from "../Users/RegisterPage";
+import ForgetPassPage from '../Users/ForgetPassPage';
+import ConfirmForgetPass from '../Users/ConfirmForgetPass';
+import Checklists from "../Pages/Check-lists";
 const Routees= () => {
     const pages = useRoutes([
         {

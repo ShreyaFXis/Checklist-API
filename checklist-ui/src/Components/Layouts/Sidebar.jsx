@@ -7,7 +7,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import StoreIcon from '@mui/icons-material/Store';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import logo from '../../Components/Assests/logo.png';
+import logo from '../../../src/Assests/logo.png';
 
 const drawerWidth = 240;
 
@@ -22,7 +22,7 @@ const theme = createTheme({
   },
 });
 
-const Sidebar = ({ open, toggleDrawer }) => {
+const Sidebar = ({ open }) => {
   return (
     <ThemeProvider theme={theme}>
       <Drawer
@@ -48,6 +48,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
 
         {/* Reduced spacing between logo and menu items */}
         <List sx={{ mt: -3 }}>
+          
           {/* Dashboard Link */}
           <ListItem button component={Link} to="/">
             <ListItemIcon>

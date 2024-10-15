@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, TextField, Avatar, IconButton, Menu, MenuItem, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, TextField, Avatar, IconButton, Menu, MenuItem, Box, ListItemIcon } from '@mui/material';
 import Sidebar from './Sidebar';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
-import avt1 from '../../Components/Assests/avt1.png';
+import PersonIcon from '@mui/icons-material/Person'; // Icon for "My Profile"
+import LogoutIcon from '@mui/icons-material/Logout'; // Icon for "Logout"
+import avt1 from '../../../src/Assests/avt1.png';
 
 const theme = createTheme({
   typography: {
@@ -63,6 +65,7 @@ const DashboardLayout = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              
               <TextField
                 variant="outlined"
                 size="small"
@@ -87,8 +90,18 @@ const DashboardLayout = () => {
                   },
                 }}
               >
-                <MenuItem onClick={handleMenuClose}>My Profile</MenuItem>
-                <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+                <MenuItem onClick={handleMenuClose}>
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  My Profile
+                </MenuItem>
+                <MenuItem onClick={handleMenuClose}>
+                  <ListItemIcon>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  Logout
+                </MenuItem>
               </Menu>
             </Box>
           </Toolbar>

@@ -1,6 +1,6 @@
 import './App.css';
-import Routees from './Components/Pages/Routees';
-import {BrowserRouter as Router, Routes, useRoutes} from 'react-router-dom';
+import Routees from './Components/Config/Routees';
+import {BrowserRouter as Router, useRoutes} from 'react-router-dom';
 
 const AppWrapper = () => {
   let element = useRoutes([
