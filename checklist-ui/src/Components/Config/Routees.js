@@ -45,12 +45,12 @@ const Routees= [
        
     },
     {
-        path:'/auth',
+        path:'/',
         element:<AuthLayout/>,
 
         children:[
             {
-                index:true,
+                path:'login',
                 element:<LoginPage/>
             },
             {

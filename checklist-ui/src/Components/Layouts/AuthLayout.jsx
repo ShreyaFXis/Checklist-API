@@ -7,7 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Outlet } from 'react-router-dom';
 
-const AuthLayout = ({ children }) => {
+const AuthLayout = () => {
   return (
     <React.Fragment>
       <CssBaseline />

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { List, ListItem, ListItemText, ListItemIcon, Drawer, Box } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import InfoIcon from '@mui/icons-material/Info';
@@ -23,6 +23,13 @@ const theme = createTheme({
 });
 
 const Sidebar = ({ open }) => {
+  const location = useLocation();
+  const [activeLink, setActiveLink] = useState(location.pathname);
+
+  useEffect(() => {
+    setActiveLink(location.pathname);
+  }, [location]);
+
   return (
     <ThemeProvider theme={theme}>
       <Drawer
@@ -48,43 +55,67 @@ const Sidebar = ({ open }) => {
 
         {/* Reduced spacing between logo and menu items */}
         <List sx={{ mt: -3 }}>
-          
           {/* Dashboard Link */}
-          <ListItem button component={Link} to="/">
+          <ListItem
+            button
+            component={Link}
+            to="/"
+            style={{ backgroundColor: activeLink === '/' ? '#F2F2F2' : 'transparent' }}
+          >
             <ListItemIcon>
-              <DashboardIcon style={{ color: '#2b2213' }} />
+              <DashboardIcon style={{ color: '#2b2213', fontWeight: activeLink === '/' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItem>
 
           {/* Checklist Link */}
-          <ListItem button component={Link} to="/checklist">
+          <ListItem
+            button
+            component={Link}
+            to="/checklist"
+            style={{ backgroundColor: activeLink === '/checklist' ? '#F2F2F2' : 'transparent' }}
+          >
             <ListItemIcon>
-              <LibraryBooksIcon style={{ color: '#2b2213' }} />
+              <LibraryBooksIcon style={{ color: '#2b2213', fontWeight: activeLink === '/checklist' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="Checklist" />
           </ListItem>
 
           {/* About Link */}
-          <ListItem button component={Link} to="/about">
+          <ListItem
+            button
+            component={Link}
+            to="/about"
+            style={{ backgroundColor: activeLink === '/about' ? '#F2F2F2' : 'transparent' }}
+          >
             <ListItemIcon>
-              <InfoIcon style={{ color: '#2b2213' }} />
+              <InfoIcon style={{ color: '#2b2213', fontWeight: activeLink === '/about' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="About" />
           </ListItem>
 
           {/* Products Link */}
-          <ListItem button component={Link} to="dashboard/products">
+          <ListItem
+            button
+            component={Link}
+            to="dashboard/products"
+            style={{ backgroundColor: activeLink === '/dashboard/products' ? '#F2F2F2' : 'transparent' }}
+          >
             <ListItemIcon>
-              <StoreIcon style={{ color: '#2b2213' }} />
+              <StoreIcon style={{ color: '#2b2213', fontWeight: activeLink === '/dashboard/products' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="Products" />
           </ListItem>
 
           {/* Settings Link */}
-          <ListItem button component={Link} to="dashboard/settings">
+          <ListItem
+            button
+            component={Link}
+            to="dashboard/settings"
+            style={{ backgroundColor: activeLink === '/dashboard/settings' ? '#F2F2F2' : 'transparent' }}
+          >
             <ListItemIcon>
-              <SettingsIcon style={{ color: '#2b2213' }} />
+              <SettingsIcon style={{ color: '#2b2b2b', fontWeight: activeLink === '/dashboard/settings' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="Settings" />
           </ListItem>
