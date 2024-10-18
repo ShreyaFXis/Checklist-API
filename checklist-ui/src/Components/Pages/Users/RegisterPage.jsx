@@ -14,7 +14,7 @@ import { useState } from 'react';
 import axios from 'axios'; // Import Axios
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AuthLayout from '../Layouts/AuthLayout';
+
 
 const RegistrationPage = () => {
   const [gender, setGender] = useState('');

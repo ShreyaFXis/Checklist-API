@@ -5,11 +5,13 @@ import DashboardPage from "../Pages/DashboardPage";
 import AboutPage from "../Pages/AboutPage";
 import ProductsPage from "../Pages/ProductsPage";
 import SettingsPage from "../Pages/SettingsPage";
-import LoginPage from "../Users/LoginPage";
-import RegisterPage from "../Users/RegisterPage";
-import ForgetPassPage from '../Users/ForgetPassPage';
-import ConfirmForgetPass from '../Users/ConfirmForgetPass';
+import LoginPage from "../Pages/Users/LoginPage";
+import RegisterPage from "../Pages/Users/RegisterPage";
+import ForgetPassPage from '../Pages/Users/ForgetPassPage';
+import ConfirmForgetPass from '../Pages/Users/ConfirmForgetPass';
 import Checklists from "../Pages/Check-lists";
+import ChecklistItems from "../Pages/checklist-items";
+
 const Routees= [
     {
         path:'/',
@@ -25,8 +27,12 @@ const Routees= [
                 element: < AboutPage/>
             },
             {
-                path:'checklist',
+                path:'checklists',
                 element:<Checklists/>
+            },
+            {
+                path:'/checklists/:checklistId',
+                element: <ChecklistItems/>
             },
             {
                 path: 'dashboard',

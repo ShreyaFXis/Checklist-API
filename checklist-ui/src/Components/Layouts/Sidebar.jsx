@@ -60,7 +60,7 @@ const Sidebar = ({ open }) => {
             button
             component={Link}
             to="/"
-            style={{ backgroundColor: activeLink === '/' ? '#F2F2F2' : 'transparent' }}
+            style={{ backgroundColor: activeLink === '/' ? '#c7c7c7' : 'transparent' }}
           >
             <ListItemIcon>
               <DashboardIcon style={{ color: '#2b2213', fontWeight: activeLink === '/' ? 'bold' : 'normal' }} />
@@ -72,11 +72,11 @@ const Sidebar = ({ open }) => {
           <ListItem
             button
             component={Link}
-            to="/checklist"
-            style={{ backgroundColor: activeLink === '/checklist' ? '#F2F2F2' : 'transparent' }}
+            to="/checklists"
+            style={{ backgroundColor: activeLink === '/checklists' ? '#c7c7c7' : 'transparent' }}
           >
             <ListItemIcon>
-              <LibraryBooksIcon style={{ color: '#2b2213', fontWeight: activeLink === '/checklist' ? 'bold' : 'normal' }} />
+              <LibraryBooksIcon style={{ color: '#2b2213', fontWeight: activeLink === '/checklists' ? 'bold' : 'normal' }} />
             </ListItemIcon>
             <ListItemText primary="Checklist" />
           </ListItem>
@@ -86,7 +86,7 @@ const Sidebar = ({ open }) => {
             button
             component={Link}
             to="/about"
-            style={{ backgroundColor: activeLink === '/about' ? '#F2F2F2' : 'transparent' }}
+            style={{ backgroundColor: activeLink === '/about' ? '#c7c7c7' : 'transparent' }}
           >
             <ListItemIcon>
               <InfoIcon style={{ color: '#2b2213', fontWeight: activeLink === '/about' ? 'bold' : 'normal' }} />
@@ -99,7 +99,7 @@ const Sidebar = ({ open }) => {
             button
             component={Link}
             to="dashboard/products"
-            style={{ backgroundColor: activeLink === '/dashboard/products' ? '#F2F2F2' : 'transparent' }}
+            style={{ backgroundColor: activeLink === '/dashboard/products' ? '#c7c7c7' : 'transparent' }}
           >
             <ListItemIcon>
               <StoreIcon style={{ color: '#2b2213', fontWeight: activeLink === '/dashboard/products' ? 'bold' : 'normal' }} />
@@ -112,7 +112,7 @@ const Sidebar = ({ open }) => {
             button
             component={Link}
             to="dashboard/settings"
-            style={{ backgroundColor: activeLink === '/dashboard/settings' ? '#F2F2F2' : 'transparent' }}
+            style={{ backgroundColor: activeLink === '/dashboard/settings' ? '#c7c7c7' : 'transparent' }}
           >
             <ListItemIcon>
               <SettingsIcon style={{ color: '#2b2b2b', fontWeight: activeLink === '/dashboard/settings' ? 'bold' : 'normal' }} />

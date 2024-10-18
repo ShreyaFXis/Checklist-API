@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import toastify CSS
-import AuthLayout from '../Layouts/AuthLayout';
+
 
 export default function LoginPage() {
   const navigate = useNavigate();
