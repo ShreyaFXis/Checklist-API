@@ -31,10 +31,6 @@ const Routees= [
                 element:<Checklists/>
             },
             {
-                path:'/checklists/:checklistId',
-                element: <ChecklistItems/>
-            },
-            {
                 path: 'dashboard',
                 children:[
                     {

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // To handle redirection
 import { AppBar, Toolbar, Typography, TextField, Avatar, IconButton, Menu, MenuItem, Box, ListItemIcon } from '@mui/material';
-import Sidebar from './Sidebar';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person'; // Icon for "My Profile"
-import LogoutIcon from '@mui/icons-material/Logout'; // Icon for "Logout"
+import PersonIcon from '@mui/icons-material/Person'; 
+import LogoutIcon from '@mui/icons-material/Logout'; 
 import avt1 from '../../../src/Assests/avt1.png';
+import Sidebar from './Sidebar';
+import { Outlet } from 'react-router-dom';
+
 
 const theme = createTheme({
   typography: {
@@ -25,7 +27,23 @@ const theme = createTheme({
 const DashboardLayout = () => {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(''); // search input
   const open = Boolean(anchorEl);
+  const navigate = useNavigate();
+
+  // Debounce effect 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm) {
+        navigate(`/checklists?search=${searchTerm}`);
+      }
+      else {
+        navigate(`/checklists`);
+      }
+    }, 500); // Delay of 500ms
+
+    return () => clearTimeout(delayDebounceFn); // Cleanup on unmount or when searchTerm changes
+  }, [searchTerm, navigate]);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -52,8 +70,6 @@ const DashboardLayout = () => {
             padding: '0 20px',
             width: `calc(100% - ${drawerOpen ? '240px' : '0px'})`,
             ml: `${drawerOpen ? '240px' : '0px'}`,
-            mt: '0',  // Removed top margin
-            borderRadius: '0px',  // Removed border radius
           }}
         >
           <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -65,11 +81,12 @@ const DashboardLayout = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              
               <TextField
                 variant="outlined"
                 size="small"
                 placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)} // Update search term
                 sx={{
                   mr: 2,
                   bgcolor: '#ffffff',
