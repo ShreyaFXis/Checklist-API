@@ -9,7 +9,6 @@ import avt1 from '../../../src/Assests/avt1.png';
 import Sidebar from './Sidebar';
 import { Outlet } from 'react-router-dom';
 
-
 const theme = createTheme({
   typography: {
     fontFamily: 'Roboto, sans-serif',
@@ -33,15 +32,15 @@ const DashboardLayout = () => {
 
   // Debounce effect 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm) {
-        navigate(`/checklists?search=${searchTerm}`);
-      }
-      else {
-        navigate(`/checklists`);
-      }
-    }, 500); // Delay of 500ms
-
+  
+      var delayDebounceFn = setTimeout(() => {
+        if (searchTerm) {
+          navigate(`/checklists?search=${searchTerm}`);
+        }
+       
+      }, 500); // Delay of 500ms
+    
+ 
     return () => clearTimeout(delayDebounceFn); // Cleanup on unmount or when searchTerm changes
   }, [searchTerm, navigate]);
 
@@ -72,6 +71,7 @@ const DashboardLayout = () => {
             ml: `${drawerOpen ? '240px' : '0px'}`,
           }}
         >
+        
           <Toolbar sx={{ justifyContent: 'space-between' }}>
             <IconButton color="inherit" aria-label="open drawer" onClick={toggleDrawer} edge="start">
               <MenuIcon />

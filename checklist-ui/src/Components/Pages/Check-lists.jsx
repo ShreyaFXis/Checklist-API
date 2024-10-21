@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Paper, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox} from '@mui/material';
+import { useSearchParams, useNavigate } from 'react-router-dom'; // useNavigate instead of navigate
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Paper, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Button, Dialog,
+  DialogTitle, DialogContent, DialogActions, TextField, } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const theme = createTheme({
   typography: {
@@ -21,11 +24,18 @@ const theme = createTheme({
 
 const Checklists = () => {
   const [checklists, setChecklists] = useState([]);
+  const [filteredChecklists, setFilteredChecklists] = useState([]); // Add filteredChecklists state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
   const [searchParams] = useSearchParams(); // Get URL search params
   const searchTerm = searchParams.get('search')?.toLowerCase() || ''; // Get search term and convert to lowercase
+
+  const [openModal, setOpenModal] = useState(false);
+  const [newChecklistTitle, setNewChecklistTitle] = useState('');
+
+  
+  const navigate = useNavigate(); // Use navigate hook
 
   useEffect(() => {
     const fetchChecklists = async () => {
@@ -55,11 +65,13 @@ const Checklists = () => {
     fetchChecklists();
   }, []);
 
-  // Filter checklists based on search term
-  const filteredChecklists = searchTerm
-    ? checklists.filter(checklist => checklist.title.toLowerCase().includes(searchTerm))
-    : checklists; // Show all checklists if search term is empty
-
+    // UseEffect for filtering checklists
+    useEffect(() => {
+      const filtered = searchTerm
+        ? checklists.filter((checklist) => checklist.title.toLowerCase().includes(searchTerm))
+        : checklists;
+      setFilteredChecklists(filtered); // Set the filtered checklists
+    }, [checklists, searchTerm]); // Run the effect whenever checklists or searchTerm changes
 
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem('token');
@@ -71,15 +83,80 @@ const Checklists = () => {
     // Logic for handling checkbox change 
   };
 
+  const handleNewChecklistClick = () => {
+    setOpenModal(true);
+  };
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setNewChecklistTitle('');
+  };
+
+  const handleCreateChecklist = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('No token found. Please log in.');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/checklists`, {
+        title: newChecklistTitle,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setChecklists(prev => [...prev, response.data]);
+
+      toast.success('Checklist created successfully!');
+      console.log(toast);
+      
+      setTimeout(() => {
+        handleCloseModal();
+      }, 2000); 
+      
+    } catch (err) {
+      setError(err.message || 'Error creating checklist.');
+    }
+  };
+
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">Error fetching checklists: {error}</Typography>;
 
   return (
     <ThemeProvider theme={theme}>
+       <Button
+          variant="contained"
+          sx={{
+            textTransform: 'none',                        // Keeps the text in sentence case
+            background: 'linear-gradient(270deg, #ec6ead,#3494e6 )',  // Initial gradient
+            backgroundSize: '200% 200%', // Double the background size to enable the motion effect
+            marginBottom: '16px', // Adds space below the button
+            color: '#000', // Change text color to suit the background
+            transition: 'background-position 0.5s ease', // Smooth transition for the gradient movement
+            backgroundPosition: '0% 50%', // Start position of the background gradient
+            '&:hover': {
+              backgroundPosition: '100% 50%', // On hover, shift the background gradient
+              background: 'linear-gradient(270deg, #3494e6, #ec6ead)',
+            },
+            
+          }} onClick={handleOpenModal}
+        >
+          Create Checklist
+        </Button>
+
       <Box sx={{ bgcolor: 'background.default', p: 2 }}>
         <Typography variant="h4" sx={{ textAlign: 'center', color: 'text.primary', mb: 2 }}>
           CheckLists
         </Typography>
+
+       
 
         <Paper>
           {filteredChecklists.length > 0 ? (
@@ -157,6 +234,27 @@ const Checklists = () => {
           )}
         </Paper>
       </Box>
+
+      <Dialog open={openModal} onClose={handleCloseModal}>
+        <DialogTitle>Create New Checklist</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Checklist Title"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={newChecklistTitle}
+            onChange={(e) => setNewChecklistTitle(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal} color="primary">Cancel</Button>
+          <Button onClick={handleCreateChecklist} color="primary">Create</Button>
+        </DialogActions>
+      </Dialog>
+
     </ThemeProvider>
   );
 };

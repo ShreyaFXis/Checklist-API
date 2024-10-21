@@ -11,6 +11,7 @@ import ForgetPassPage from '../Pages/Users/ForgetPassPage';
 import ConfirmForgetPass from '../Pages/Users/ConfirmForgetPass';
 import Checklists from "../Pages/Check-lists";
 import ChecklistItems from "../Pages/checklist-items";
+import CreateChecklist from "../Pages/Create-checklist";
 
 const Routees= [
     {
@@ -43,6 +44,7 @@ const Routees= [
                     },
                 ],
             },
+           
         ],
        
     },
@@ -67,6 +69,7 @@ const Routees= [
                 path:'reset-password',
                 element: <ConfirmForgetPass/>
             },
+
         ],
     },
    
