@@ -34,10 +34,10 @@ export default function LoginPage() {
       // Show success toast
       toast.success('Login successful!', {
         position: 'top-center',
-        autoClose: 2000, // Auto close after 2 seconds
+        autoClose: 2000, 
       });
 
-      // Navigate to another page (e.g., dashboard) after successful login
+      // Navigate to dashboard
       setTimeout(() => {
         navigate('/');
       }, 2000); // Delay navigation for toast to show

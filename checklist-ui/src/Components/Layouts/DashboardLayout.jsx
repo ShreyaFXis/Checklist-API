@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import avt1 from '../../../src/Assests/avt1.png';
 import Sidebar from './Sidebar';
 import { Outlet } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const theme = createTheme({
   typography: {
@@ -27,22 +28,24 @@ const DashboardLayout = () => {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchTerm, setSearchTerm] = useState(''); // search input
+  const location = useLocation(); // Get current route
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
 
   // Debounce effect 
-  useEffect(() => {
-  
-      var delayDebounceFn = setTimeout(() => {
-        if (searchTerm) {
-          navigate(`/checklists?search=${searchTerm}`);
-        }
-       
-      }, 500); // Delay of 500ms
+useEffect(() => {
+  if (location.pathname === '/checklists') { // Apply effect only on the checklist page
+    var delayDebounceFn = setTimeout(() => {
+      if (searchTerm) {
+        navigate(`/checklists?search=${searchTerm}`);
+      } else {
+        navigate('/checklists'); // Clear URL when searchTerm is empty
+      }
+    }, 500); // Delay of 500ms
     
- 
     return () => clearTimeout(delayDebounceFn); // Cleanup on unmount or when searchTerm changes
-  }, [searchTerm, navigate]);
+  }
+}, [searchTerm, navigate, location.pathname]);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -55,6 +58,8 @@ const DashboardLayout = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  console.log(drawerOpen)
 
   return (
     <ThemeProvider theme={theme}>
@@ -126,7 +131,7 @@ const DashboardLayout = () => {
 
         <Sidebar open={drawerOpen} toggleDrawer={toggleDrawer} />
 
-        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 ,width: drawerOpen ? `calc(100% - 240px)` : '100%',transition: 'width 0.3s, margin-left 0.3s',}}>
           <Outlet />
         </Box>
       </Box>

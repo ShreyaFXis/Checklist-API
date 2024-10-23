@@ -9,7 +9,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import logo from '../../../src/Assests/logo.png';
 
-const drawerWidth = 240;
 
 const theme = createTheme({
   typography: {
@@ -23,6 +22,7 @@ const theme = createTheme({
 });
 
 const Sidebar = ({ open }) => {
+  const drawerWidth = open ? 240 : 'auto';
   const location = useLocation();
   const [activeLink, setActiveLink] = useState(location.pathname);
 
