@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';  // Correctly import useNavigate
 import { toast } from 'react-toastify';  // Remove ToastContainer here
 import 'react-toastify/dist/ReactToastify.css';
-import AuthLayout from '../Layouts/AuthLayout';  // Import AuthLayout
+import AuthLayout from '../../Layouts/AuthLayout';  // Import AuthLayout
 
 const CreateChecklist = () => {
   const [title, setTitle] = useState('');

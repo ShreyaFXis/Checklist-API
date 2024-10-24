@@ -9,10 +9,7 @@ import LoginPage from "../Pages/Users/LoginPage";
 import RegisterPage from "../Pages/Users/RegisterPage";
 import ForgetPassPage from '../Pages/Users/ForgetPassPage';
 import ConfirmForgetPass from '../Pages/Users/ConfirmForgetPass';
-import Checklists from "../Pages/Check-lists";
-import ChecklistItems from "../Pages/checklist-items";
-import CreateChecklist from "../Pages/Create-checklist";
-
+import Checklists from "../Pages/Checklists/Check-lists";
 const Routees= [
     {
         path:'/',

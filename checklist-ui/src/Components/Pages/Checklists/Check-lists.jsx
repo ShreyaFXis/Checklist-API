@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom'; 
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Paper, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Button, Dialog,
-  DialogTitle, DialogContent, DialogActions, TextField, Select, MenuItem } from '@mui/material';
+  DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import CloseIcon from '@mui/icons-material/Close';
+import noItems from '../../../Assests/NoItemsYet.gif';
 
 const theme = createTheme({
   typography: {
@@ -30,8 +31,16 @@ const Checklists = () => {
   const [error, setError] = useState('');
   const [openItemModal, setOpenItemModal] = useState(false);
   const [newChecklistItemText, setNewChecklistItemText] = useState('');
-  const [selectedChecklistId, setSelectedChecklistId] = useState(null);
+  const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
+  
+  const [expandedAccordions, setExpandedAccordions] = useState([]);
+
+  const handleAccordionChange = (panel) => () => {
+    setExpandedAccordions((prev) =>
+      prev.includes(panel) ? prev.filter((p) => p !== panel) : [...prev, panel]
+    );
+  };
 
   const [searchParams] = useSearchParams(); // Get URL search params
   const searchTerm = searchParams.get('search')?.toLowerCase() || ''; // Get search term and convert to lowercase
@@ -76,6 +85,8 @@ const Checklists = () => {
         : checklists;
       setFilteredChecklists(filtered); // Set the filtered checklists
     }, [checklists, searchTerm]); // Run the effect whenever checklists or searchTerm changes
+    
+  
 
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem('token');
@@ -178,9 +189,15 @@ const Checklists = () => {
     }
   };
 
-
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">Error fetching checklists: {error}</Typography>;
+
+  const tableHeaders = [    // For the Checkbox header
+    { label: '', sx: { fontWeight: 'bold', color: 'text.primary', textAlign: 'center', borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' } }, 
+    { label: '#', sx: { fontWeight: 'bold', color: 'text.primary', textAlign: 'center', borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' } },
+    { label: 'Item', sx: { fontWeight: 'bold', color: 'text.primary', textAlign: 'center', borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' } },
+    { label: 'Updated On', sx: { fontWeight: 'bold', color: 'text.primary', textAlign: 'center', borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' } },
+  ];
 
   return (
     <ThemeProvider theme={theme}>
@@ -194,12 +211,11 @@ const Checklists = () => {
           CheckLists
         </Typography>
 
-
         <Button
           variant="contained"
           sx={{
             textTransform: 'none', // Keeps the text in sentence case
-            background: 'linear-gradient(270deg, #ec6ead,#3494e6)', // Initial gradient
+            background: 'linear-gradient(270deg, #3494e6, #ec6ead)', // Initial gradient
             backgroundSize: '200% 200%', // Double the background size to enable the motion effect
             marginBottom: '16px', // Adds space below the button
             color: '#000', // Change text color to suit the background
@@ -218,6 +234,7 @@ const Checklists = () => {
         </Button>
 
         <Button
+        
           variant="contained"
           sx={{
             textTransform: 'none', // Keeps the text in sentence case
@@ -241,45 +258,43 @@ const Checklists = () => {
 
         </div>
 
-       
-
+      
         <Paper>
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
-              <Accordion key={checklist.id}>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{ cursor: 'pointer', color: 'text.primary' }}
-                >
-                  <Typography>{`  ${checklist.title}`}</Typography>
+              <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ cursor: 'pointer', color: 'text.primary' }}>
+                  <Typography sx={{ fontWeight: expandedAccordions.includes(checklist.id) ? 'bold' : 'normal' }}>
+                    {` ${checklist.title}`}
+                  </Typography>
                 </AccordionSummary>
-                <AccordionDetails>
+                <AccordionDetails
+                 sx={{
+                  transition: 'all 0.3s ease-in-out', // Smooth transition
+                  minHeight: expandedAccordions.includes(checklist.id) ? 'auto' : '50px', // Consistent space
+                  maxHeight: expandedAccordions.includes(checklist.id) ? 'none' : '50px', // Adjust height when collapsed
+                  overflow: 'hidden' // Hide overflow when collapsed
+                }}
+                >
                   {/* Table for checklist items */}
-                  <TableContainer component={Paper} sx={{ width: '80%', margin: '0 auto', tableLayout: 'fixed', maxHeight: 300, overflowY: 'auto' }}>
+                  <TableContainer sx={{ width: '80%', margin: '0 auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
                     {checklist.items.length > 0 ? (
                       <Table sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', textAlign: 'center',borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' }}>
-                              {/* Checkbox Header */}
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', textAlign: 'center',borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' }}>
-                              #
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', textAlign: 'center',borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' }}>
-                              Item
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', textAlign: 'center',borderRight: '0.5px solid #333', borderBottom: '0.5px solid #333' }}>
-                              Updated On
-                            </TableCell>
+                            {tableHeaders.map((header, index) => (
+                              <TableCell key={index} sx={header.sx}>
+                                {header.label}
+                              </TableCell>
+                            ))}
                           </TableRow>
                         </TableHead>
-                        <TableBody>
+                        <TableBody sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
                           {checklist.items.map((item, idx) => (
-                            <TableRow
+                            <TableRow 
                               key={item.id}
                               sx={{
-                                '&:hover': { backgroundColor: '#e8e8e8' },
+                                '&:hover': { backgroundColor: '#e8e8e8' }
                               }}
                             >
                               <TableCell sx={{ borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center' }}>
@@ -304,9 +319,21 @@ const Checklists = () => {
                         </TableBody>
                       </Table>
                     ) : (
-                      <Typography variant="h6" align="center" sx={{ margin: 2 }}>
-                        No checklist items available.
-                      </Typography>
+                      <Box
+                        sx={{
+                          border: '1px solid #ccc', // Add a border
+                          borderRadius: '4px',      // Rounded corners
+                          padding: 1,               // Padding inside the box
+                          margin: 1,                // Margin outside the box
+                          textAlign: 'center',      // Center text alignment
+                          backgroundColor: '#f9f9f9' // Optional: background color
+                        }}
+                      >
+                        <img src={noItems} style={{ width: '150px', height: 'auto' }} alt="No items"/> 
+                        <Typography variant="h6" align="center" sx={{ margin: 1 }}>
+                          No checklist items added.
+                        </Typography>
+                      </Box>
                     )}
                   </TableContainer>
                 </AccordionDetails>
@@ -319,32 +346,69 @@ const Checklists = () => {
           )}
         </Paper>
       </Box>
+      
+         {/* Checklist item creation modal */}
+      <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="md" > {/* Adjust width as needed */}
+         <div >
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          
+            <Typography variant="h6">
+              Create Checklist
+            </Typography>
 
-      <Dialog open={openModal} onClose={handleCloseModal}>
-        <DialogTitle>Create New Checklist</DialogTitle>
+          {/* Close Icon on the right */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CloseIcon  sx={{ cursor: 'pointer'}} onClick={handleCloseModal} />
+            </Box>
+            </DialogTitle>
 
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Checklist Title"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newChecklistTitle}
-            onChange={(e) => setNewChecklistTitle(e.target.value)}
-          />
-        </DialogContent>
+        {/* Divider */}
+        <Divider sx={{ my: 1 }} />
 
-        <DialogActions>
-          <Button onClick={handleCloseModal} color="primary">Cancel</Button>
-          <Button onClick={handleCreateChecklist} color="primary">Create</Button>
-        </DialogActions>
+        </div>
+
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              padding= "15px 15px"
+              label="Checklist Title"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={newChecklistTitle}
+              onChange={(e) => setNewChecklistTitle(e.target.value)}
+            />
+             
+          </DialogContent>
+          <Divider sx={{ my: 1 }} /> {/* Divider below the text field */}
+          <DialogActions sx={{ justifyContent: 'flex-end' }}>
+            <Button variant= "contained" onClick={handleCreateChecklist} color="primary">
+              Create
+            </Button>
+          </DialogActions>
       </Dialog>
-
+          
         {/* Checklist item creation modal */}
-      <Dialog open={openItemModal} onClose={handleCloseItemModal}>
-        <DialogTitle>Create New Checklist Item</DialogTitle>
+      <Dialog open={openItemModal} onClose={handleCloseItemModal} fullWidth maxWidth="md" >
+
+        <div >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Title on the left */}
+          <Typography variant="h6">
+            Add Checklist Item
+          </Typography>
+
+          {/* Close Icon on the right */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CloseIcon sx={{ cursor: 'pointer'}} onClick={handleCloseItemModal} />
+          </Box>
+          </DialogTitle>
+
+          {/* Divider */}
+          <Divider sx={{ my: 0.5 }} />
+        </div>
+
         <DialogContent>
           <TextField
             label="Checklist Item"
@@ -352,30 +416,38 @@ const Checklists = () => {
             onChange={(e) => setNewChecklistItemText(e.target.value)}
             fullWidth
           />
-          <Select
-            labelId="checklist-select-label"
-            id="checklist-select"
-            value={selectedChecklistForItem}
-            label="Select Checklist"
-            onChange={(e) => setSelectedChecklistForItem(e.target.value)}
-            fullWidth
-            sx={{ marginTop: '16px' }}
-          >
-            {checklists.map((checklist) => (
-              <MenuItem key={checklist.id} value={checklist.id}>
-                {checklist.title}
-              </MenuItem>
-            ))}
-          </Select>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseItemModal}>Cancel</Button>
-          <Button onClick={handleCreateChecklistItem} variant="contained">
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
 
+          <formcontrol>
+          <TextField
+    select
+    label="Select Checklist"
+    value={selectedChecklistForItem}
+    onChange={(e) => setSelectedChecklistForItem(e.target.value)}
+    fullWidth
+    sx={{ marginTop: '16px' }}
+  >
+    {/* Placeholder MenuItem
+    <MenuItem value="">
+      <em>Select Checklist</em>
+    </MenuItem> */}
+    {checklists.map((checklist) => (
+      <MenuItem key={checklist.id} value={checklist.id}>
+        {checklist.title}
+      </MenuItem>
+    ))}
+  </TextField>
+          </formcontrol>
+         
+
+        </DialogContent>
+        <Divider sx={{ my: 0.5 }} />
+        <DialogActions sx={{ justifyContent: 'flex-end' }}>
+            <Button variant= "contained" onClick={handleCreateChecklistItem} color="primary">
+              Add
+            </Button>
+          </DialogActions>
+      </Dialog>
+      
       <ToastContainer/>
     </ThemeProvider>
   );
