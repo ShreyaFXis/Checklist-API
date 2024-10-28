@@ -33,6 +33,7 @@ const Checklists = () => {
   const [newChecklistItemText, setNewChecklistItemText] = useState('');
   const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
+  const [titleError, setTitleError] = useState(false);
   
   const [expandedAccordions, setExpandedAccordions] = useState([]);
 
@@ -116,6 +117,21 @@ const Checklists = () => {
       return;
     }
 
+    if (!newChecklistTitle.trim()) {
+      toast.error("Title can't be empty.",{
+        position: 'top-center'
+      });
+      return;
+    }
+      
+    const existingTitles = checklists.map(checklist => checklist.title);
+  if (existingTitles.includes(newChecklistTitle)) {
+    toast.error("You already have a checklist with this title.", {
+      position: 'top-center'
+    });
+    return;
+  }
+  
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/checklists`, {
         title: newChecklistTitle,
@@ -127,15 +143,29 @@ const Checklists = () => {
 
       setChecklists(prev => [...prev, response.data]);
       handleCloseModal();
+      setTitleError(false); // Clear error after successful creation
+      setNewChecklistTitle(''); // Reset field after successful creation
 
       toast.success('Checklist created successfully!',{
         position: 'top-center'
       });  
       
     } catch (err) {
-      setError(err.message || 'Error creating checklist.');
+      const errorMessage = err.response?.data?.message || 'Error creating checklist.';
+      if (errorMessage.includes('non_field_errors')) { // Adjust the error message check as needed
+        setTitleError(true);
+        toast.error('You already have a checklist with this title.', {
+          position: 'top-center'
+        });
+      } else {
+        setTitleError(false); // Clear error state for other errors
+        toast.error(errorMessage);
+      }
+
+      //setError(errorMessage);
     }
   };
+
 
   // Handle open item modal for checklist items
    const handleOpenItemModal = (checklistId) => {
@@ -156,8 +186,20 @@ const Checklists = () => {
       return;
     }
 
+
+  if (!newChecklistItemText.trim()) { // Check if item text is empty
+    //setError('Checklist item text cannot be empty.');
+    toast.error('Checklist item text cannot be empty!', {
+      position: 'top-center',
+    });
+    return;
+  }
+
     if (!selectedChecklistForItem) {
-      setError('Please select a checklist for this item.');
+      //setError('Please select a checklist for this item.');
+      toast.error('Please select a checklist for this item.',{
+        position: 'top-center',
+      })
       return;
     }
 
@@ -186,6 +228,9 @@ const Checklists = () => {
       });
     } catch (err) {
       setError(err.message || 'Error creating checklist item.');
+      toast.error('Error creating checklist item: ' + (err.message || 'Unknown error'), {
+        position: 'top-center',
+      });
     }
   };
 
@@ -201,7 +246,6 @@ const Checklists = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      
 
       <Box sx={{ bgcolor: 'background.default', p: 2 }}>
         <div className='wrapper-class' style={{display:'flex', alignContent:'stretch'}}>
@@ -262,28 +306,29 @@ const Checklists = () => {
         <Paper>
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
-              <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ cursor: 'pointer', color: 'text.primary' }}>
-                  <Typography sx={{ fontWeight: expandedAccordions.includes(checklist.id) ? 'bold' : 'normal' }}>
+              <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)} sx = {{margin :'1px 0'}}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ cursor: 'pointer', color: 'text.primary', minHeight: 40  }}>
+                  <Typography sx={{ fontWeight: expandedAccordions.includes(checklist.id) ? 'bold' : 'normal', fontSize: '0.9rem' }}>
                     {` ${checklist.title}`}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails
                  sx={{
                   transition: 'all 0.3s ease-in-out', // Smooth transition
-                  minHeight: expandedAccordions.includes(checklist.id) ? 'auto' : '50px', // Consistent space
-                  maxHeight: expandedAccordions.includes(checklist.id) ? 'none' : '50px', // Adjust height when collapsed
-                  overflow: 'hidden' // Hide overflow when collapsed
+                  minHeight: expandedAccordions.includes(checklist.id) ? 'auto' : '40px', // Consistent space
+                  maxHeight: expandedAccordions.includes(checklist.id) ? 'none' : '40px', // Adjust height when collapsed
+                  overflow: 'hidden', // Hide overflow when collapsed
+                
                 }}
                 >
                   {/* Table for checklist items */}
-                  <TableContainer sx={{ width: '80%', margin: '0 auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
+                  <TableContainer sx={{ width: '80%', margin: '4px auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
                     {checklist.items.length > 0 ? (
                       <Table sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
                         <TableHead>
                           <TableRow>
                             {tableHeaders.map((header, index) => (
-                              <TableCell key={index} sx={header.sx}>
+                              <TableCell key={index} sx={{padding: '4px',...header.sx}}>
                                 {header.label}
                               </TableCell>
                             ))}
@@ -297,21 +342,22 @@ const Checklists = () => {
                                 '&:hover': { backgroundColor: '#e8e8e8' }
                               }}
                             >
-                              <TableCell sx={{ borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center' }}>
+                              <TableCell sx={{ borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center', padding: '4px' }}>
                                 <Checkbox
                                   checked={item.is_checked}
                                   onChange={() => handleCheckboxChange(checklist.id, item.id)}
+                                  size = "small"
                                 />
                               </TableCell>
                               <TableCell sx={{ color: 'text.primary', borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center' }}>
                                 {idx + 1}
                               </TableCell>
-                              <TableCell sx={{ color: 'text.primary', borderBottom: '1px solid #ccc', borderRight: '0.5px solid #333',textAlign: 'center' }}>
+                              <TableCell sx={{ color: 'text.primary', borderBottom: '1px solid #ccc', borderRight: '0.5px solid #333',textAlign: 'center', padding: '5px' }}>
                                 <span style={{ textDecoration: item.is_checked ? 'line-through' : 'none' }}>
                                   {item.text}
                                 </span>
                               </TableCell>
-                              <TableCell sx={{ color: 'text.primary', borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center' }}>
+                              <TableCell sx={{ color: 'text.primary', borderBottom: '1px solid #ccc',borderRight: '0.5px solid #333', textAlign: 'center', padding: '3px' }}>
                                 {new Date(item.updated_on).toLocaleString()}
                               </TableCell>
                             </TableRow>
@@ -321,12 +367,12 @@ const Checklists = () => {
                     ) : (
                       <Box
                         sx={{
-                          border: '1px solid #ccc', // Add a border
-                          borderRadius: '4px',      // Rounded corners
-                          padding: 1,               // Padding inside the box
-                          margin: 1,                // Margin outside the box
-                          textAlign: 'center',      // Center text alignment
-                          backgroundColor: '#f9f9f9' // Optional: background color
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',      
+                          padding: 1,               
+                          margin: 1,                
+                          textAlign: 'center',      
+                          backgroundColor: '#f9f9f9' 
                         }}
                       >
                         <img src={noItems} style={{ width: '150px', height: 'auto' }} alt="No items"/> 
@@ -347,10 +393,10 @@ const Checklists = () => {
         </Paper>
       </Box>
       
-         {/* Checklist item creation modal */}
-      <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="md" > {/* Adjust width as needed */}
+         {/* Checklist  creation modal */}
+      <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="sm" > {/* Adjust width as needed */}
          <div >
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
           
             <Typography variant="h6">
               Create Checklist
@@ -363,13 +409,14 @@ const Checklists = () => {
             </DialogTitle>
 
         {/* Divider */}
-        <Divider sx={{ my: 1 }} />
+        <Divider sx={{ my: 0.5 }} />
 
         </div>
 
           <DialogContent>
             <TextField
               autoFocus
+             
               margin="dense"
               padding= "15px 15px"
               label="Checklist Title"
@@ -377,20 +424,29 @@ const Checklists = () => {
               fullWidth
               variant="outlined"
               value={newChecklistTitle}
-              onChange={(e) => setNewChecklistTitle(e.target.value)}
+              onChange={(e) => {
+                setNewChecklistTitle(e.target.value);
+                setTitleError(false); // Clear error when the user starts typing
+              }}
+              error={titleError}
+              helperText={titleError ? "Field can't be empty." : ''}
+           
             />
              
           </DialogContent>
-          <Divider sx={{ my: 1 }} /> {/* Divider below the text field */}
-          <DialogActions sx={{ justifyContent: 'flex-end' }}>
-            <Button variant= "contained" onClick={handleCreateChecklist} color="primary">
-              Create
-            </Button>
-          </DialogActions>
+
+          <div>
+            <Divider sx={{ my: 0.5 }} /> {/* Divider below the text field */}
+            <DialogActions sx={{ justifyContent: 'flex-end' }}>
+              <Button variant= "contained" onClick={handleCreateChecklist} color="primary">
+                Create
+              </Button>
+            </DialogActions>
+          </div>
       </Dialog>
           
         {/* Checklist item creation modal */}
-      <Dialog open={openItemModal} onClose={handleCloseItemModal} fullWidth maxWidth="md" >
+      <Dialog open={openItemModal} onClose={handleCloseItemModal} fullWidth maxWidth="sm" >
 
         <div >
           <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
