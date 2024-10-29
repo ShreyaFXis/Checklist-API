@@ -34,13 +34,32 @@ const Checklists = () => {
   const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
-  
+  const [checklistItems, setChecklistItems] = useState({});
+
   const [expandedAccordions, setExpandedAccordions] = useState([]);
 
-  const handleAccordionChange = (panel) => () => {
+  const handleAccordionChange = (panelId) => async () => {
     setExpandedAccordions((prev) =>
-      prev.includes(panel) ? prev.filter((p) => p !== panel) : [...prev, panel]
+      prev.includes(panelId) ? prev.filter((id) => id !== panelId) : [...prev, panelId]
     );
+
+    if (!expandedAccordions.includes(panelId)) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('No token found. Please log in.');
+          return;
+        }
+        const response = await axios.get(`http://127.0.0.1:8000/api/checklists/${panelId}/items`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setChecklistItems((prevItems) => ({ ...prevItems, [panelId]: response.data }));
+      } catch (err) {
+        toast.error('Error fetching checklist items: ' + (err.message || 'Unknown error'), {
+          position: 'top-center',
+        });
+      }
+    }
   };
 
   const [searchParams] = useSearchParams(); // Get URL search params
@@ -180,7 +199,6 @@ const Checklists = () => {
 
   const handleCreateChecklistItem = async () => {
     const token = localStorage.getItem('token');
-
     if (!token) {
       alert('No token found. Please log in.');
       return;
@@ -303,7 +321,7 @@ const Checklists = () => {
         </div>
 
       
-        <Paper>
+        <>
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
               <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)} sx = {{margin :'1px 0'}}>
@@ -390,7 +408,7 @@ const Checklists = () => {
               No checklists found for the search term.
             </Typography>
           )}
-        </Paper>
+        </>
       </Box>
       
          {/* Checklist  creation modal */}

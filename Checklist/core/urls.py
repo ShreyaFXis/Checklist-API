@@ -1,4 +1,4 @@
-from core.views import (TestApiViews, ChecklistsApiViews, ChecklistItemsCreateApiViews, ChecklistApiViews,ChecklistItemsApiViews)
+from core.views import (TestApiViews, ChecklistsApiViews, ChecklistItemsCreateApiViews, ChecklistApiViews,ChecklistItemsApiViews, ChecklistItemsListApiViews)
 
 from django.urls import path
 
@@ -9,6 +9,7 @@ urlpatterns = [
     path('checklists/<int:pk>', ChecklistApiViews.as_view()),  #for Retrieve/Update/Delete single checklist
     path('checklists/items',ChecklistItemsCreateApiViews.as_view()), # to create new item
     path('checklists/<int:checklist_id>/items/<int:pk>', ChecklistItemsApiViews.as_view()), #for Retrieve/Update/Delete single items
+    path('checklists/<int:checklist_id>/items', ChecklistItemsListApiViews.as_view(), name='checklist-items-list'), #to retrive all the items from particular checklist ID
 
     #api/checklists/{checklist Id}/items/{checklist items ID}
 

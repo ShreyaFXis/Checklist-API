@@ -64,3 +64,13 @@ class ChecklistItemsApiViews(RetrieveUpdateDestroyAPIView):
             checklist_id=checklist_id,
             id=checklist_item_id
         )
+
+class ChecklistItemsListApiViews(ListAPIView):
+    serializer_class = CheckListItemsSerializer
+    permission_classes = [IsAuthenticated, isOwner]
+    '''Listing'''
+
+    def get_queryset(self):
+        checklist_id = self.kwargs.get('checklist_id')
+        # Return the filtered queryset directly
+        return CheckListItems.objects.filter(user=self.request.user, checklist_id=checklist_id)
