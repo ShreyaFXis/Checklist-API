@@ -27,6 +27,12 @@ class ChecklistsApiViews(ListCreateAPIView):
 
     def get_queryset(self):
         # Return the filtered queryset directly
+        data=CheckList.objects.filter(user=self.request.user)
+        result=[]
+        for elm in data:
+            result.append(str(elm.title))
+        
+        print(result)
         return CheckList.objects.filter(user=self.request.user)
 
 

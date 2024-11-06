@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom'; 
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Paper, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Button, Dialog,
-  DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider} from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Button, Dialog,
+  DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton, LinearProgress} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { toast, ToastContainer} from 'react-toastify';
@@ -26,6 +26,7 @@ const theme = createTheme({
 
 const Checklists = () => {
   const [checklists, setChecklists] = useState([]);
+  const [checkTitlesList,setCheckTitlesList]=useState([])
   const [filteredChecklists, setFilteredChecklists] = useState([]); // Add filteredChecklists state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,6 +36,7 @@ const Checklists = () => {
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
   const [checklistItems, setChecklistItems] = useState({});
+  const [loadingItems, setLoadingItems] = useState({});
 
   const [expandedAccordions, setExpandedAccordions] = useState([]);
 
@@ -43,7 +45,10 @@ const Checklists = () => {
       prev.includes(panelId) ? prev.filter((id) => id !== panelId) : [...prev, panelId]
     );
 
+    // Fetch items if not already loaded
     if (!expandedAccordions.includes(panelId)) {
+      setLoadingItems((prev) => ({ ...prev, [panelId]: true })); // Set loading for specific checklist items
+
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -58,6 +63,8 @@ const Checklists = () => {
         toast.error('Error fetching checklist items: ' + (err.message || 'Unknown error'), {
           position: 'top-center',
         });
+      } finally {
+        setLoadingItems((prev) => ({ ...prev, [panelId]: false })); // Set loading false after fetching
       }
     }
   };
@@ -87,7 +94,15 @@ const Checklists = () => {
           },
         });
 
-        setChecklists(response.data);
+        console.log(response.data);
+        if(response && response.data){
+          const checklistTitles = response.data.map((checklist) => checklist.title);
+          console.log(checklistTitles)
+          setCheckTitlesList(checklistTitles);
+          setChecklists(response.data);
+        }
+  
+        // setChecklists(response.data)
       } catch (err) {
         setError(err.message || 'Error fetching checklists.');
       } finally {
@@ -106,7 +121,6 @@ const Checklists = () => {
       setFilteredChecklists(filtered); // Set the filtered checklists
     }, [checklists, searchTerm]); // Run the effect whenever checklists or searchTerm changes
     
-  
 
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem('token');
@@ -252,7 +266,7 @@ const Checklists = () => {
     }
   };
 
-  if (loading) return <Typography>Loading...</Typography>;
+  if (loading) return <LinearProgress color="secondary" />;
   if (error) return <Typography color="error">Error fetching checklists: {error}</Typography>;
 
   const tableHeaders = [    // For the Checkbox header
@@ -339,8 +353,18 @@ const Checklists = () => {
                 
                 }}
                 >
-                  {/* Table for checklist items */}
-                  <TableContainer sx={{ width: '80%', margin: '4px auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
+                  {loadingItems[checklist.id] ? (
+                // Show skeletons when loading checklist items
+                <>
+                 <Skeleton />
+                 <Skeleton animation="wave" />
+                 <Skeleton animation="wave" />
+                 <Skeleton animation="waves" />
+                </>
+              ) : (
+                  <>
+                     {/* Table for checklist items */}
+                     <TableContainer sx={{ width: '80%', margin: '4px auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
                     {checklist.items.length > 0 ? (
                       <Table sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
                         <TableHead>
@@ -400,6 +424,8 @@ const Checklists = () => {
                       </Box>
                     )}
                   </TableContainer>
+                  </>
+                  )}
                 </AccordionDetails>
               </Accordion>
             ))
