@@ -22,3 +22,10 @@ class CheckListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckList
         fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Check if the 'titles_only' context is set to only return 'id' and 'title'
+        if self.context.get('titles_only'):
+            return {'id': representation['id'], 'title': representation['title']}
+        return representation

@@ -27,13 +27,20 @@ class ChecklistsApiViews(ListCreateAPIView):
 
     def get_queryset(self):
         # Return the filtered queryset directly
-        data=CheckList.objects.filter(user=self.request.user)
+        ''' data=CheckList.objects.filter(user=self.request.user)
         result=[]
         for elm in data:
             result.append(str(elm.title))
         
-        print(result)
+        print(result)'''
         return CheckList.objects.filter(user=self.request.user)
+    
+    def get_serializer_context(self):
+        # Add 'titles_only' to the context if the query parameter is present
+        context = super().get_serializer_context()
+        if self.request.query_params.get('titles_only') == 'true':
+            context['titles_only'] = True
+        return context
 
 
 # class to check single id of checklist

@@ -26,7 +26,6 @@ const theme = createTheme({
 
 const Checklists = () => {
   const [checklists, setChecklists] = useState([]);
-  const [checkTitlesList,setCheckTitlesList]=useState([])
   const [filteredChecklists, setFilteredChecklists] = useState([]); // Add filteredChecklists state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,11 +34,14 @@ const Checklists = () => {
   const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
+  const [itemTextError, setItemTextError] = useState(false);
+  const [checklistSelectError, setChecklistSelectError] = useState('');
   const [checklistItems, setChecklistItems] = useState({});
   const [loadingItems, setLoadingItems] = useState({});
 
   const [expandedAccordions, setExpandedAccordions] = useState([]);
 
+  // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
     setExpandedAccordions((prev) =>
       prev.includes(panelId) ? prev.filter((id) => id !== panelId) : [...prev, panelId]
@@ -58,6 +60,7 @@ const Checklists = () => {
         const response = await axios.get(`http://127.0.0.1:8000/api/checklists/${panelId}/items`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log(response.data)
         setChecklistItems((prevItems) => ({ ...prevItems, [panelId]: response.data }));
       } catch (err) {
         toast.error('Error fetching checklist items: ' + (err.message || 'Unknown error'), {
@@ -88,21 +91,21 @@ const Checklists = () => {
           return;
         }
 
-        const response = await axios.get(`http://127.0.0.1:8000/api/checklists`, {
+        const response = await axios.get(`http://127.0.0.1:8000/api/checklists?titles_only=true`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
+       // console.log(response.data);
+       // if(response && response.data){
+        //  const checklistTitles = response.data.map((checklist) => checklist.title);
+        //  console.log(checklistTitles)
+        //  setCheckTitlesList(checklistTitles);
+        //  setChecklists(response.data);
+       // }
         console.log(response.data);
-        if(response && response.data){
-          const checklistTitles = response.data.map((checklist) => checklist.title);
-          console.log(checklistTitles)
-          setCheckTitlesList(checklistTitles);
-          setChecklists(response.data);
-        }
-  
-        // setChecklists(response.data)
+        setChecklists(response.data || [])
       } catch (err) {
         setError(err.message || 'Error fetching checklists.');
       } finally {
@@ -118,7 +121,7 @@ const Checklists = () => {
       const filtered = searchTerm
         ? checklists.filter((checklist) => checklist.title.toLowerCase().includes(searchTerm))
         : checklists;
-      setFilteredChecklists(filtered); // Set the filtered checklists
+      setFilteredChecklists(filtered || []); // Set the filtered checklists
     }, [checklists, searchTerm]); // Run the effect whenever checklists or searchTerm changes
     
 
@@ -151,7 +154,7 @@ const Checklists = () => {
     }
 
     if (!newChecklistTitle.trim()) {
-      toast.error("Title can't be empty.",{
+      setTitleError("Title can't be empty.",{
         position: 'top-center'
       });
       return;
@@ -159,7 +162,7 @@ const Checklists = () => {
       
     const existingTitles = checklists.map(checklist => checklist.title);
   if (existingTitles.includes(newChecklistTitle)) {
-    toast.error("You already have a checklist with this title.", {
+    setTitleError("You already have a checklist with this title.", {
       position: 'top-center'
     });
     return;
@@ -199,7 +202,6 @@ const Checklists = () => {
     }
   };
 
-
   // Handle open item modal for checklist items
    const handleOpenItemModal = (checklistId) => {
     setSelectedChecklistForItem(checklistId);
@@ -217,25 +219,23 @@ const Checklists = () => {
       alert('No token found. Please log in.');
       return;
     }
-
+  
 
   if (!newChecklistItemText.trim()) { // Check if item text is empty
     //setError('Checklist item text cannot be empty.');
-    toast.error('Checklist item text cannot be empty!', {
-      position: 'top-center',
-    });
+    setItemTextError('Checklist Item text cannot be empty!');
     return;
   }
 
     if (!selectedChecklistForItem) {
       //setError('Please select a checklist for this item.');
-      toast.error('Please select a checklist for this item.',{
-        position: 'top-center',
-      })
+      setChecklistSelectError('Please select a checklist for this item.');
+      
       return;
     }
 
-
+    
+    
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/checklists/items`, {
         text: newChecklistItemText,
@@ -254,6 +254,8 @@ const Checklists = () => {
       );
       setChecklists(updatedChecklists);
       handleCloseItemModal();
+      setItemTextError(false);
+      setChecklistSelectError(false)
 
       toast.success('Checklist item created successfully!', {
         position: 'top-center',
@@ -333,11 +335,11 @@ const Checklists = () => {
         </Button>
 
         </div>
-
       
         <>
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
+              
               <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)} sx = {{margin :'1px 0'}}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ cursor: 'pointer', color: 'text.primary', minHeight: 40  }}>
                   <Typography sx={{ fontWeight: expandedAccordions.includes(checklist.id) ? 'bold' : 'normal', fontSize: '0.9rem' }}>
@@ -364,8 +366,9 @@ const Checklists = () => {
               ) : (
                   <>
                      {/* Table for checklist items */}
-                     <TableContainer sx={{ width: '80%', margin: '4px auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: checklist.items.length > 0 ? '1px solid #333' : 'none'}}>
-                    {checklist.items.length > 0 ? (
+                    
+                    <TableContainer sx={{ width: '80%', margin: '4px auto', tableLayout: 'fixed', maxHeight: 300,  overflowY: 'auto', borderBottom: (checklistItems[checklist.id] && checklistItems[checklist.id].length > 0) ? '1px solid #333' : 'none'}}>
+                    {checklistItems[checklist.id] && checklistItems[checklist.id].length > 0  ? (
                       <Table sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
                         <TableHead>
                           <TableRow>
@@ -377,7 +380,7 @@ const Checklists = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody sx={{ bgcolor: '#eeeee', border: '1px solid #333'}}>
-                          {checklist.items.map((item, idx) => (
+                          {(checklistItems[checklist.id] || []).map((item, idx) => (
                             <TableRow 
                               key={item.id}
                               sx={{
@@ -423,7 +426,7 @@ const Checklists = () => {
                         </Typography>
                       </Box>
                     )}
-                  </TableContainer>
+                    </TableContainer>
                   </>
                   )}
                 </AccordionDetails>
@@ -473,7 +476,7 @@ const Checklists = () => {
                 setTitleError(false); // Clear error when the user starts typing
               }}
               error={titleError}
-              helperText={titleError ? "Field can't be empty." : ''}
+              helperText={titleError ? "Checklist title can't be empty." : ''}
            
             />
              
@@ -490,62 +493,59 @@ const Checklists = () => {
       </Dialog>
           
         {/* Checklist item creation modal */}
-      <Dialog open={openItemModal} onClose={handleCloseItemModal} fullWidth maxWidth="sm" >
-
-        <div >
+      <Dialog open={openItemModal} onClose={handleCloseItemModal} fullWidth maxWidth="sm">
+        <div>
           <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {/* Title on the left */}
-          <Typography variant="h6">
-            Add Checklist Item
-          </Typography>
-
-          {/* Close Icon on the right */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CloseIcon sx={{ cursor: 'pointer'}} onClick={handleCloseItemModal} />
-          </Box>
+            <Typography variant="h6">Add Checklist Item</Typography>
+            <CloseIcon sx={{ cursor: 'pointer' }} onClick={handleCloseItemModal} />
           </DialogTitle>
-
-          {/* Divider */}
           <Divider sx={{ my: 0.5 }} />
         </div>
 
         <DialogContent>
           <TextField
+            autoFocus
+          
             label="Checklist Item"
             value={newChecklistItemText}
-            onChange={(e) => setNewChecklistItemText(e.target.value)}
+            onChange={(e) => {
+              setNewChecklistItemText(e.target.value);
+              setItemTextError(false);
+            }}
             fullWidth
+            error={!!itemTextError}
+            helperText={itemTextError}
           />
 
-          <formcontrol>
-          <TextField
-    select
-    label="Select Checklist"
-    value={selectedChecklistForItem}
-    onChange={(e) => setSelectedChecklistForItem(e.target.value)}
-    fullWidth
-    sx={{ marginTop: '16px' }}
-  >
-    {/* Placeholder MenuItem
-    <MenuItem value="">
-      <em>Select Checklist</em>
-    </MenuItem> */}
-    {checklists.map((checklist) => (
-      <MenuItem key={checklist.id} value={checklist.id}>
-        {checklist.title}
-      </MenuItem>
-    ))}
-  </TextField>
-          </formcontrol>
-         
 
+          <TextField
+            select
+            label="Select Checklist"
+            value={selectedChecklistForItem}
+            onChange={(e) =>{ 
+              setSelectedChecklistForItem(e.target.value);
+              setChecklistSelectError(false);
+            }}
+            fullWidth
+            sx={{ mt: 2 }}
+            error={!!checklistSelectError}
+            helperText={checklistSelectError}
+          >
+            {checklists.map((checklist) => (
+              <MenuItem key={checklist.id} value={checklist.id}>
+                {checklist.title}
+              </MenuItem>
+            ))}
+          </TextField>
         </DialogContent>
+
         <Divider sx={{ my: 0.5 }} />
+
         <DialogActions sx={{ justifyContent: 'flex-end' }}>
-            <Button variant= "contained" onClick={handleCreateChecklistItem} color="primary">
-              Add
-            </Button>
-          </DialogActions>
+          <Button variant="contained" onClick={handleCreateChecklistItem} color="primary">
+            Add
+          </Button>
+        </DialogActions>
       </Dialog>
       
       <ToastContainer/>
