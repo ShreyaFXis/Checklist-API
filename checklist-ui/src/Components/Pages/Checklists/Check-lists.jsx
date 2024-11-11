@@ -35,11 +35,14 @@ const Checklists = () => {
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
   const [itemTextError, setItemTextError] = useState(false);
+  const [TextError, setTextError] = useState(false);
   const [checklistSelectError, setChecklistSelectError] = useState('');
   const [checklistItems, setChecklistItems] = useState({});
   const [loadingItems, setLoadingItems] = useState({});
-
+  const [newItemText, setNewItemText] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
   const [expandedAccordions, setExpandedAccordions] = useState([]);
+  const [checklistId,setChecklistId]=useState(null)
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -97,14 +100,7 @@ const Checklists = () => {
           },
         });
 
-       // console.log(response.data);
-       // if(response && response.data){
-        //  const checklistTitles = response.data.map((checklist) => checklist.title);
-        //  console.log(checklistTitles)
-        //  setCheckTitlesList(checklistTitles);
-        //  setChecklists(response.data);
-       // }
-        console.log(response.data);
+        //console.log(response.data);
         setChecklists(response.data || [])
       } catch (err) {
         setError(err.message || 'Error fetching checklists.');
@@ -160,13 +156,13 @@ const Checklists = () => {
       return;
     }
       
-    const existingTitles = checklists.map(checklist => checklist.title);
-  if (existingTitles.includes(newChecklistTitle)) {
-    setTitleError("You already have a checklist with this title.", {
-      position: 'top-center'
-    });
-    return;
-  }
+   /* const existingTitles = checklists.map(checklist => checklist.title);
+    if (existingTitles.includes(newChecklistTitle)) {
+      toast.error("You already have a checklist with this title.", {
+        position: 'top-center'
+      });
+      return;
+    }*/
   
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/checklists`, {
@@ -176,6 +172,7 @@ const Checklists = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      
 
       setChecklists(prev => [...prev, response.data]);
       handleCloseModal();
@@ -187,15 +184,17 @@ const Checklists = () => {
       });  
       
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error creating checklist.';
-      if (errorMessage.includes('non_field_errors')) { // Adjust the error message check as needed
+      console.log("err",err)
+      if(err.status == 400)
+      {
+        const errorMessage = err.response?.data?.title?.[0] ?? err.message;
         setTitleError(true);
-        toast.error('You already have a checklist with this title.', {
-          position: 'top-center'
+        toast.error(errorMessage, {
+          position: 'top-center',
         });
       } else {
         setTitleError(false); // Clear error state for other errors
-        toast.error(errorMessage);
+        toast.error(err.message);
       }
 
       //setError(errorMessage);
@@ -220,7 +219,6 @@ const Checklists = () => {
       return;
     }
   
-
   if (!newChecklistItemText.trim()) { // Check if item text is empty
     //setError('Checklist item text cannot be empty.');
     setItemTextError('Checklist Item text cannot be empty!');
@@ -234,8 +232,6 @@ const Checklists = () => {
       return;
     }
 
-    
-    
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/checklists/items`, {
         text: newChecklistItemText,
@@ -266,6 +262,45 @@ const Checklists = () => {
         position: 'top-center',
       });
     }
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+    setNewItemText(''); 
+  };
+
+  // Function to close dialog
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setNewItemText(''); 
+  };
+
+  const handleAddChecklistItem = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('No token found. Please log in.');
+      return;
+    }
+    if(checklistId){
+      try {
+        console.log("Selected Id: ",checklistId)
+        await axios.post(`http://127.0.0.1:8000/api/checklists/items`, {
+          text: newItemText,
+          checklist: checklistId,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        toast.success("Checklist item added successfully!");
+        setNewItemText(''); // Clear input
+        handleOpenDialog(); // Close dialog on success
+      } catch (error) {
+        toast.error("Failed to add checklist item.");
+      }
+    }
+
   };
 
   if (loading) return <LinearProgress color="secondary" />;
@@ -340,7 +375,7 @@ const Checklists = () => {
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
               
-              <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)} sx = {{margin :'1px 0'}}>
+              <Accordion key={checklist.id} onChange={handleAccordionChange(checklist.id)} expanded={expandedAccordions.includes(checklist.id)} sx = {{margin :'1px 0'}}> 
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ cursor: 'pointer', color: 'text.primary', minHeight: 40  }}>
                   <Typography sx={{ fontWeight: expandedAccordions.includes(checklist.id) ? 'bold' : 'normal', fontSize: '0.9rem' }}>
                     {` ${checklist.title}`}
@@ -429,6 +464,34 @@ const Checklists = () => {
                     </TableContainer>
                   </>
                   )}
+
+                  <Button
+                    variant="contained"
+                    sx={{
+                      textTransform: 'none', // Keeps the text in sentence case
+                      background: 'linear-gradient(270deg, #3494e6, #ec6ead)', // Initial gradient
+                      backgroundSize: '200% 200%', // Double the background size to enable the motion effect
+                      marginBottom: '16px', // Adds space below the button
+                      color: '#000', // Change text color to suit the background
+                      transition: 'background-position 0.5s ease', // Smooth transition for the gradient movement
+                      backgroundPosition: '0% 50%', // Start position of the background gradient
+                      '&:hover': {
+                        backgroundPosition: '100% 50%', // On hover, shift the background gradient
+                        background: 'linear-gradient(270deg, #3494e6, #ec6ead)',
+                      },
+                      
+                      display: 'block', // Ensure the button takes block space so marginLeft works
+                      mx: 'auto', // Centers the button horizontally
+                      borderRadius: '20px', // Adds border-radius of 20px
+                    }}
+                    onClick={()=>{
+                      handleOpenDialog();
+                      setChecklistId(checklist.id)
+                    }}
+                  >
+                    Add Item
+                  </Button>
+
                 </AccordionDetails>
               </Accordion>
             ))
@@ -476,7 +539,7 @@ const Checklists = () => {
                 setTitleError(false); // Clear error when the user starts typing
               }}
               error={titleError}
-              helperText={titleError ? "Checklist title can't be empty." : ''}
+              helperText={titleError ? titleError : ''}
            
             />
              
@@ -546,6 +609,41 @@ const Checklists = () => {
             Add
           </Button>
         </DialogActions>
+      </Dialog>
+
+        {/* Individual Checklist item creation modal */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <div>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Add Checklist Item</Typography>
+            <CloseIcon sx={{ cursor: 'pointer' }} onClick={handleCloseDialog} />
+          </DialogTitle>
+          <Divider sx={{ my: 0.5 }} />
+        </div>
+
+        <DialogContent>
+
+          <TextField
+              autoFocus
+            
+              label="Checklist Item"
+              value={newItemText}
+              onChange={(e) => {
+                setNewItemText(e.target.value)
+              }}
+              fullWidth
+            />
+
+        </DialogContent>
+
+        <Divider sx={{ my: 0.5 }} />
+
+        <DialogActions sx={{ justifyContent: 'flex-end' }}>
+          <Button variant="contained" onClick={handleAddChecklistItem} color="primary">
+            Add
+          </Button>
+        </DialogActions>
+
       </Dialog>
       
       <ToastContainer/>
