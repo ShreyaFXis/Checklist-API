@@ -17,8 +17,6 @@ class CheckListItemsSerializer(serializers.ModelSerializer):
         model = CheckListItems
         fields = '__all__'
 
-    
-
 
 class CheckListSerializer(serializers.ModelSerializer):
     items = CheckListItemsSerializer(source ='checklistitems_set', many = True, read_only = True)

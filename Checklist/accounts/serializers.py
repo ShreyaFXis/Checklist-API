@@ -1,59 +1,12 @@
-'''from rest_framework import serializers
-
-from django.contrib.auth import CustomUser
-
-User = CustomUser()
-class UserRegisterSerializer(serializers.ModelSerializer):
-
-    password = serializers.CharField(required = True, write_only = True)
-    password2 = serializers.CharField(required = True, write_only = True)
-    class Meta:
-        model = User
-        fields = [
-            'username',
-            'email',
-            'password',
-            'password2',
-            'profile_photo',
-            'gender',
-            'phone_number'
-
-        ]
-        extra_kwargs ={
-            'password': {'write_only': True},
-            'password2': {'write_only': True}
-        }
-
-    def create(self,validated_data):
-        username = validated_data.get('username')
-        email = validated_data.get('email')
-        password = validated_data.get('password')
-        password2 = validated_data.get('password2')
-        profile_photo = validated_data.get('profile_photo')
-        gender = validated_data.get('gender')
-        phone_number = validated_data.get('phone_number')
-
-
-        if password == password2:
-            #user = User(username=username, email=email)
-            user = User(username=username, email=email, profile_photo=profile_photo, gender=gender,
-                        phone_number=phone_number)
-            user.set_password(password)
-            user.save()
-            return user
-        else:
-            raise serializers.ValidationError({
-                'error':'Passwords do not match.'
-            })
-'''
-
 from rest_framework import serializers
 from accounts.models import CustomUser  # Proper import for CustomUser model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 from django.core.mail import send_mail
 from django.conf import settings
-
+from .models import CustomUser
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -125,17 +78,22 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         # Generate reset link (using frontend URL)
         reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={email}"
 
+        # Render the email template with context
+        html_content = render_to_string('password_reset_email.html', {
+            'reset_link': reset_link,
+            'username': user.username, 
+            'email': email
+        })
 
-
-        # Send email with reset link
-        send_mail(
-            'Password Reset Request',
-            f'Click the link to reset your password: {reset_link} \n Token : {token}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
+       # Send email with reset link
+        email_message = EmailMessage(
+            subject='Password Reset Request',
+            body=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
         )
-
+        email_message.content_subtype = 'html'  # Important for HTML email
+        email_message.send(fail_silently=False)
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
