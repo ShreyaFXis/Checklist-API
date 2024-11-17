@@ -397,7 +397,7 @@ const Checklists = () => {
   };
   
    // Open dialog when Edit icon is clicked
-   const handleEditIconClick = (checklistId, item) => {
+    const handleEditIconClick = (checklistId, item) => {
     setSelectedItemText(item.text);  // Set the item text for editing
     setCurrentChecklistId(checklistId);  // Set checklist ID
     setItemId(item.id);  // Set item ID
@@ -416,37 +416,51 @@ const Checklists = () => {
   // Submit the updated checklist item text to the backend
   const handleUpdateItem = async () => {
     const token = localStorage.getItem("token");
-
+  
     if (!token) {
       alert("No token found. Please log in.");
       return;
     }
-
+  
     try {
-      const response = await axios.patch(
+      await axios.patch(
         `http://127.0.0.1:8000/api/checklists/${currentChecklistId}/items/${itemId}`,
-        {
-          text: selectedItemText,  // Send the updated text
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,  // Include token in headers
-          },
-        }
+        { text: selectedItemText },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Handle success (e.g., update UI, show a success message)
+       // Update the state if checklistItems is an object
+      setChecklistItems((prevItems) => {
+      if (prevItems[currentChecklistId]) {
+        // Get the updated items array for the current checklist
+        const updatedItems = prevItems[currentChecklistId].map(item =>
+          item.id === itemId ? { ...item, text: selectedItemText } : item
+        );
+
+        return {
+          ...prevItems,  // Spread the existing items
+          [currentChecklistId]: updatedItems,  // Update the current checklist's items
+        };
+      }
+      return prevItems;  // If no checklist exists, return unchanged state
+    });
       toast.success("Checklist item updated successfully!", {
         position: "top-center",
       });
-      CloseDialog();  // Close the dialog after successful update
+  
+
+      CloseDialog();
     } catch (error) {
-      console.error('Failed to update item:', error);
-      toast.error(error.message || 'An error occurred while updating the checklist item.', {
-        position: "top-center",
-      });
+      console.error("Failed to update item:", error);
+      toast.error(
+        error.message || "An error occurred while updating the checklist item.",
+        {
+          position: "top-center",
+        }
+      );
     }
   };
+  
 
 
   if (loading) return <LinearProgress color="secondary" />;
@@ -727,7 +741,6 @@ const Checklists = () => {
                                         item.updated_on
                                       ).toLocaleString()}
                                     </TableCell>
-
                                     <TableCell
                                       sx={{
                                         color: "text.primary",
@@ -1007,7 +1020,7 @@ const Checklists = () => {
               alignItems: "center",
             }}
           >
-            <Typography variant="h6">Edit Checklist Item</Typography>
+            <Typography variant="h6">Update Checklist Item</Typography>
             <CloseIcon sx={{ cursor: "pointer" }} onClick={CloseDialog} />
           </DialogTitle>
           <Divider sx={{ my: 0.5 }} />
