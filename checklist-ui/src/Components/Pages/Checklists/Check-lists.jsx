@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
-  LinearProgress, 
+  LinearProgress, Pagination, 
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -56,6 +56,10 @@ const Checklists = () => {
   const [selectedItemText, setSelectedItemText] = useState('');  // Store the item text only
   const [currentChecklistId, setCurrentChecklistId] = useState(null);  // Store checklist ID
   const [itemId, setItemId] = useState(null); // Store item ID  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Adjust items per page as needed
+  const[fullData,setFullData] = useState();
 
   // console.log(checklistItems)
   // handle accordion changes
@@ -146,8 +150,22 @@ const Checklists = () => {
           checklist.title.toLowerCase().includes(searchTerm)
         )
       : checklists;
-    setFilteredChecklists(filtered || []); // Set the filtered checklists
-  }, [checklists, searchTerm]); // Run the effect whenever checklists or searchTerm changes
+        setFullData(filtered)
+
+       // Slice the filtered checklists based on page and itemsPerPage
+    const paginatedChecklists = filtered.slice(
+      (page - 1) * itemsPerPage,
+      page * itemsPerPage
+    );
+    
+
+    setFilteredChecklists(paginatedChecklists || []); // Set the filtered checklists
+  }, [checklists, searchTerm,page,itemsPerPage]); // Run the effect whenever checklists or searchTerm changes
+
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem("token");
@@ -1045,6 +1063,13 @@ const Checklists = () => {
       </Dialog>
 
       <ToastContainer />
+      {/* Pagination component */}
+        <Pagination
+          count={Math.ceil(fullData.length / itemsPerPage)}
+          page={page}
+          onChange={handleChangePage}
+          sx={{ mt: 2 }}
+        />
     </ThemeProvider>
   );
 };
