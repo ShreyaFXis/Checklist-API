@@ -13,9 +13,12 @@ from .models import *
 from core.permissions import isOwner
 from .serializers import CheckListSerializer
 from .serializers import CheckListItemsSerializer
-
+from rest_framework.pagination import PageNumberPagination
 # Create your views here.
 
+
+class TenPerPagePagination(PageNumberPagination):
+    page_size = 10  # Set to 10 checklists per page
 
 class TestApiViews(APIView):
     def get(self, request, format=None):
@@ -25,13 +28,14 @@ class TestApiViews(APIView):
 class ChecklistsApiViews(ListCreateAPIView):
     serializer_class = CheckListSerializer
     permission_classes = [IsAuthenticated, isOwner]
+    pagination_class = TenPerPagePagination
     '''Listing, Creation'''
 
     def get_queryset(self):
         # Return the filtered queryset directly
-        print("is create")
+        # print("is create")
         return CheckList.objects.filter(user=self.request.user)
-    
+     
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request.query_params.get('titles_only') == 'true':

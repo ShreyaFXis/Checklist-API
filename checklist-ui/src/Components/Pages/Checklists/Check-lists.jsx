@@ -14,8 +14,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-
-
 import noItems from "../../../Assests/NoItemsYet.gif";
 
 const theme = createTheme({
@@ -60,8 +58,15 @@ const Checklists = () => {
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10); // Adjust items per page as needed
   const[fullData,setFullData] = useState();
+  const [itemsPage, setItemsPage] = useState(1);
 
-  // console.log(checklistItems)
+  const [searchParams] = useSearchParams(); // Get URL search params
+  const searchTerm = searchParams.get("search")?.toLowerCase() || ""; // Get search term and convert to lowercase
+
+  const [openModal, setOpenModal] = useState(false);
+  const [newChecklistTitle, setNewChecklistTitle] = useState("");
+ 
+
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
     setExpandedAccordions((prev) =>
@@ -103,13 +108,7 @@ const Checklists = () => {
       }
     }
   };
-
-  const [searchParams] = useSearchParams(); // Get URL search params
-  const searchTerm = searchParams.get("search")?.toLowerCase() || ""; // Get search term and convert to lowercase
-
-  const [openModal, setOpenModal] = useState(false);
-  const [newChecklistTitle, setNewChecklistTitle] = useState("");
-
+  
   // UseEffect for fetching checklists
   useEffect(() => {
     const fetchChecklists = async () => {
@@ -130,7 +129,7 @@ const Checklists = () => {
             },
           }
         );
-
+        //console.log("Response : ");
         //console.log(response.data);
         setChecklists(response.data || []);
       } catch (err) {
@@ -150,13 +149,13 @@ const Checklists = () => {
           checklist.title.toLowerCase().includes(searchTerm)
         )
       : checklists;
-        setFullData(filtered)
+        setFullData(filtered);
 
        // Slice the filtered checklists based on page and itemsPerPage
-    const paginatedChecklists = filtered.slice(
-      (page - 1) * itemsPerPage,
-      page * itemsPerPage
-    );
+        const paginatedChecklists = filtered.slice(
+          (page - 1) * itemsPerPage,
+          page * itemsPerPage
+        );
     
 
     setFilteredChecklists(paginatedChecklists || []); // Set the filtered checklists
@@ -165,6 +164,11 @@ const Checklists = () => {
   // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
+  };
+
+  // Handle page change for checklist items
+  const handleItemsPageChange = (event, newPage) => {
+    setItemsPage(newPage);
   };
 
   const handleCheckboxChange = async (checklistId, itemId) => {
@@ -384,6 +388,7 @@ const Checklists = () => {
     }
   };
 
+  //Handle Delete checklist items for individual checklist
   const handleDeleteItem = async (checklistId, itemId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -414,7 +419,7 @@ const Checklists = () => {
     }
   };
   
-   // Open dialog when Edit icon is clicked
+    // Open dialog when Edit icon is clicked
     const handleEditIconClick = (checklistId, item) => {
     setSelectedItemText(item.text);  // Set the item text for editing
     setCurrentChecklistId(checklistId);  // Set checklist ID
@@ -690,7 +695,11 @@ const Checklists = () => {
                                 border: "1px solid #333",
                               }}
                             >
-                              {(checklistItems[checklist.id] || []).map(
+                              
+                              {(checklistItems[checklist.id] || []).slice(
+                                  (itemsPage - 1) * itemsPerPage,
+                                  itemsPage * itemsPerPage
+                                ).map(
                                 (item, idx) => (
                                   <TableRow
                                     key={item.id}
@@ -771,14 +780,23 @@ const Checklists = () => {
                                     >
                                       <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
                                         <EditIcon sx={{ cursor: "pointer" }} onClick={() => handleEditIconClick(checklist.id, item)} /> 
-                                        <DeleteIcon sr={{cursor: "pointer"}} onClick={() => handleDeleteItem(checklist.id, item.id)}/>
+                                        <DeleteIcon sx={{cursor: "pointer"}} onClick={() => handleDeleteItem(checklist.id, item.id)}/>
                                       </Box>
                                     </TableCell>
                                   </TableRow>
                                 )
                               )}
                             </TableBody>
-                          </Table>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                              <Pagination
+                                variant="outlined"
+                                count={Math.ceil(checklistItems[checklist.id].length / itemsPerPage)}
+                                page={itemsPage}
+                                onChange={handleItemsPageChange}
+                              />
+                            </Box>
+                          </Table>    
                         ) : (
                           <Box
                             sx={{
@@ -842,6 +860,14 @@ const Checklists = () => {
             </Typography>
           )}
         </>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Pagination
+            variant="outlined"
+            count={Math.ceil(fullData.length / itemsPerPage)}
+            page={page}
+            onChange={handleChangePage}
+          />
+        </Box>
       </Box>
 
       {/* Checklist creation modal */}
@@ -958,11 +984,15 @@ const Checklists = () => {
             error={!!checklistSelectError}
             helperText={checklistSelectError}
           >
-            {checklists.map((checklist) => (
-              <MenuItem key={checklist.id} value={checklist.id}>
-                {checklist.title}
-              </MenuItem>
-            ))}
+           {Array.isArray(checklists) && checklists.length > 0 ? (
+              checklists.map((checklist) => (
+                <MenuItem key={checklist.id} value={checklist.id}>
+                  {checklist.title}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>No Checklists Available</MenuItem>
+            )}
           </TextField>
         </DialogContent>
 
@@ -1064,12 +1094,7 @@ const Checklists = () => {
 
       <ToastContainer />
       {/* Pagination component */}
-        <Pagination
-          count={Math.ceil(fullData.length / itemsPerPage)}
-          page={page}
-          onChange={handleChangePage}
-          sx={{ mt: 2 }}
-        />
+        
     </ThemeProvider>
   );
 };

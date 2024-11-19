@@ -44,6 +44,3 @@ class CheckListSerializer(serializers.ModelSerializer):
                 'title': 'You already have a checklist with this title.'
             })
         return data
-
-
-        

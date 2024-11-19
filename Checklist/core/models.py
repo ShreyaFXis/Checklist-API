@@ -12,11 +12,9 @@ class CheckList(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # class Meta:
-    #     unique_together = ('user', 'title')
-        
     def __str__(self):
         return self.title
+    
 
 class CheckListItems(models.Model):
     text = models.CharField(max_length=250)
