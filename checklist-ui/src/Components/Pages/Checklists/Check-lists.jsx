@@ -57,8 +57,10 @@ const Checklists = () => {
   // Pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10); // Adjust items per page as needed
-  const[fullData,setFullData] = useState();
   const [itemsPage, setItemsPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [paginationState, setPaginationState] = useState({}); // Manage pagination per checklist
+  
 
   const [searchParams] = useSearchParams(); // Get URL search params
   const searchTerm = searchParams.get("search")?.toLowerCase() || ""; // Get search term and convert to lowercase
@@ -75,40 +77,60 @@ const Checklists = () => {
         : [...prev, panelId]
     );
 
-    // Fetch items if not already loaded
     if (!expandedAccordions.includes(panelId)) {
-      setLoadingItems((prev) => ({ ...prev, [panelId]: true })); // Set loading for specific checklist items
+      await fetchChecklistItems(panelId, 1); // Fetch page 1 by default
+    }
+  };
 
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          toast.error("No token found. Please log in.");
-          return;
-        }
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/checklists/${panelId}/items`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        //console.log(response.data)
-        setChecklistItems((prevItems) => ({
-          ...prevItems,
-          [panelId]: response.data,
-        }));
-      } catch (err) {
-        toast.error(
-          "Error fetching checklist items: " + (err.message || "Unknown error"),
-          {
-            position: "top-center",
-          }
-        );
-      } finally {
-        setLoadingItems((prev) => ({ ...prev, [panelId]: false })); // Set loading false after fetching
+  const fetchChecklistItems = async (checklistId, page = 1) => {
+    setLoadingItems((prev) => ({ ...prev, [checklistId]: true }));
+  
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("No token found. Please log in.");
+        return;
       }
+  
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/checklists/${checklistId}/items?page=${page}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      // Update items and pagination state
+      setChecklistItems((prevItems) => ({
+        ...prevItems,
+        [checklistId]: response.data.results,
+      }));
+  
+      setPaginationState((prevState) => ({
+        ...prevState,
+        [checklistId]: {
+          currentPage: page,
+          totalPages: response.data.total_pages || 1,
+        },
+      }));
+      console.log("totalPages : ",totalPages)
+    } catch (err) {
+      toast.error(
+        `Error fetching checklist items: ${err.message || "Unknown error"}`
+      );
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [checklistId]: false }));
     }
   };
   
+  
+
+  // Handle page change for checklist items
+  const handleItemsPageChange = async (event, newPage, checklistId) => {
+    console.log(`Fetching page ${newPage} for checklist ${checklistId}`); // Debug log
+    await fetchChecklistItems(checklistId, newPage); // Fetch data directly for the new page
+  };
+  
+
   // UseEffect for fetching checklists
   useEffect(() => {
     const fetchChecklists = async () => {
@@ -120,9 +142,9 @@ const Checklists = () => {
           setLoading(false);
           return;
         }
-
+        //console.log(page);
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/checklists?titles_only=true`,
+          `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -131,7 +153,8 @@ const Checklists = () => {
         );
         //console.log("Response : ");
         //console.log(response.data);
-        setChecklists(response.data || []);
+        setChecklists(response.data.results || []); // Paginated results
+        setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Total pages
       } catch (err) {
         setError(err.message || "Error fetching checklists.");
       } finally {
@@ -140,37 +163,29 @@ const Checklists = () => {
     };
 
     fetchChecklists();
-  }, []);
+  }, [page]);
 
   // UseEffect for filtering checklists
   useEffect(() => {
     const filtered = searchTerm
       ? checklists.filter((checklist) =>
-          checklist.title.toLowerCase().includes(searchTerm)
+          checklist.title.toLowerCase().includes(searchTerm.toLowerCase())
         )
       : checklists;
-        setFullData(filtered);
-
-       // Slice the filtered checklists based on page and itemsPerPage
-        const paginatedChecklists = filtered.slice(
-          (page - 1) * itemsPerPage,
-          page * itemsPerPage
-        );
-    
-
-    setFilteredChecklists(paginatedChecklists || []); // Set the filtered checklists
-  }, [checklists, searchTerm,page,itemsPerPage]); // Run the effect whenever checklists or searchTerm changes
+  
+    setFilteredChecklists(filtered); // Set filtered checklists
+      
+   // console.log("checklists ::::: ",checklists);
+    //console.log("filter ::::: ",filtered);
+  
+  }, [checklists, searchTerm]);
 
   // Handle page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Handle page change for checklist items
-  const handleItemsPageChange = (event, newPage) => {
-    setItemsPage(newPage);
-  };
-
+  
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem("token");
 
@@ -470,8 +485,6 @@ const Checklists = () => {
       toast.success("Checklist item updated successfully!", {
         position: "top-center",
       });
-  
-
       CloseDialog();
     } catch (error) {
       console.error("Failed to update item:", error);
@@ -484,7 +497,6 @@ const Checklists = () => {
     }
   };
   
-
 
   if (loading) return <LinearProgress color="secondary" />;
   if (error)
@@ -546,6 +558,7 @@ const Checklists = () => {
     },
   ];
 
+  
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ bgcolor: "background.default", p: 2 }}>
@@ -553,6 +566,7 @@ const Checklists = () => {
           className="wrapper-class"
           style={{ display: "flex", alignContent: "stretch" }}
         >
+
           <Typography
             variant="h4"
             // sx={{ textAlign: 'left', color: 'text.primary', mb: 2 }}
@@ -696,10 +710,7 @@ const Checklists = () => {
                               }}
                             >
                               
-                              {(checklistItems[checklist.id] || []).slice(
-                                  (itemsPage - 1) * itemsPerPage,
-                                  itemsPage * itemsPerPage
-                                ).map(
+                              {(checklistItems[checklist.id] || []).map(
                                 (item, idx) => (
                                   <TableRow
                                     key={item.id}
@@ -734,7 +745,8 @@ const Checklists = () => {
                                         textAlign: "center",
                                       }}
                                     >
-                                      {idx + 1}
+                                      {idx + 1 + ((paginationState[checklist.id]?.currentPage || 1) - 1) * 10}
+
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -788,14 +800,16 @@ const Checklists = () => {
                               )}
                             </TableBody>
 
-                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                              <Pagination
-                                variant="outlined"
-                                count={Math.ceil(checklistItems[checklist.id].length / itemsPerPage)}
-                                page={itemsPage}
-                                onChange={handleItemsPageChange}
-                              />
-                            </Box>
+                            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                            <Pagination
+                              variant="outlined"
+                              count={paginationState[checklist.id]?.totalPages || 1}
+                              page={paginationState[checklist.id]?.currentPage || 1}
+                              onChange={(event, newPage) =>
+                                handleItemsPageChange(event, newPage, checklist.id)
+                              }
+                            />
+</Box>
                           </Table>    
                         ) : (
                           <Box
@@ -861,12 +875,12 @@ const Checklists = () => {
           )}
         </>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-          <Pagination
-            variant="outlined"
-            count={Math.ceil(fullData.length / itemsPerPage)}
-            page={page}
-            onChange={handleChangePage}
-          />
+        <Pagination variant="outlined"
+          count={totalPages}
+          page={page}
+          onChange={handleChangePage}
+          
+        />
         </Box>
       </Box>
 

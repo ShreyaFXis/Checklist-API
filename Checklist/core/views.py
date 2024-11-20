@@ -80,6 +80,7 @@ class ChecklistItemsApiViews(RetrieveUpdateDestroyAPIView):
 class ChecklistItemsListApiViews(ListAPIView):
     serializer_class = CheckListItemsSerializer
     permission_classes = [IsAuthenticated, isOwner]
+    pagination_class = TenPerPagePagination
     '''Listing'''
 
     def get_queryset(self):
