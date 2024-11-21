@@ -57,7 +57,7 @@ const Checklists = () => {
   // Pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10); // Adjust items per page as needed
-  const [itemsPage, setItemsPage] = useState(1);
+
   const [totalPages, setTotalPages] = useState(0);
   const [paginationState, setPaginationState] = useState({}); // Manage pagination per checklist
   
@@ -95,7 +95,7 @@ const Checklists = () => {
       const response = await axios.get(
         `http://127.0.0.1:8000/api/checklists/${checklistId}/items?page=${page}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}`},
         }
       );
   
@@ -104,15 +104,20 @@ const Checklists = () => {
         ...prevItems,
         [checklistId]: response.data.results,
       }));
-  
-      setPaginationState((prevState) => ({
+      
+     // console.log("response.data.count:: ",response.data.count)
+
+      const page_count=Math.ceil(response.data.count / 10)
+      
+    setPaginationState((prevState) => ({
         ...prevState,
         [checklistId]: {
           currentPage: page,
-          totalPages: response.data.total_pages || 1,
+          totalPages: page_count || 1,
         },
-      }));
-      console.log("totalPages : ",totalPages)
+      })); 
+      //console.log("item totalPages  : ",totalPages)
+
     } catch (err) {
       toast.error(
         `Error fetching checklist items: ${err.message || "Unknown error"}`
@@ -122,7 +127,7 @@ const Checklists = () => {
     }
   };
   
-  
+ 
 
   // Handle page change for checklist items
   const handleItemsPageChange = async (event, newPage, checklistId) => {
@@ -669,7 +674,7 @@ const Checklists = () => {
                     </>
                   ) : (
                     <>
-
+                      
                       {/* Table for checklist items */}
                       <TableContainer
                         sx={{
@@ -678,7 +683,10 @@ const Checklists = () => {
                           mb: "16px",
                           tableLayout: "fixed",
                           maxHeight: 300,
-                          overflowY: "auto",
+                          overflowY: "scroll",
+                          paddingRight: "2px", // Space for the scrollbar
+                          border: "1px solid #333", // Border for the entire container
+                        
                           borderBottom:
                             checklistItems[checklist.id] &&
                             checklistItems[checklist.id].length > 0
@@ -688,8 +696,15 @@ const Checklists = () => {
                       >
                         {checklistItems[checklist.id] &&
                         checklistItems[checklist.id].length > 0 ? (
-                          <Table
-                            sx={{ bgcolor: "#eeeee", border: "1px solid #333" }}
+                          <Box sx={{
+                            display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    height: "100%", // Space between table and pagination
+                          }}>
+                            
+                          <Table  stickyHeader aria-label="sticky table"
+                            sx={{ bgcolor: "#eeeee", borderCollapse: "collapse" }}
                           >
                             <TableHead>
                               <TableRow>
@@ -706,7 +721,6 @@ const Checklists = () => {
                             <TableBody
                               sx={{
                                 bgcolor: "#eeeee",
-                                border: "1px solid #333",
                               }}
                             >
                               
@@ -799,18 +813,34 @@ const Checklists = () => {
                                 )
                               )}
                             </TableBody>
+                            
 
-                            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                            <Pagination
-                              variant="outlined"
-                              count={paginationState[checklist.id]?.totalPages || 1}
-                              page={paginationState[checklist.id]?.currentPage || 1}
-                              onChange={(event, newPage) =>
-                                handleItemsPageChange(event, newPage, checklist.id)
-                              }
-                            />
-</Box>
-                          </Table>    
+
+
+                          </Table>  
+                          <Box
+                          sx={{
+                            position: "sticky", // Makes the element sticky
+                            bottom: 0, // Sticks at the bottom of the scrollable container
+                            backgroundColor: "#fff", // Ensure it has a background color to cover content
+                            zIndex: 1, // Ensures it stays above the table
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            padding: "8px",
+                            borderTop: "1px solid #ccc", // Optional: Adds a top border for better visibility
+                          }}>
+  <Pagination
+    variant="outlined"
+    count={paginationState[checklist.id]?.totalPages || 1}
+    page={paginationState[checklist.id]?.currentPage || 1}
+    onChange={(event, newPage) =>
+      handleItemsPageChange(event, newPage, checklist.id)
+    }
+  />
+                          </Box>
+                          </Box>
+                          
                         ) : (
                           <Box
                             sx={{
@@ -874,6 +904,7 @@ const Checklists = () => {
             </Typography>
           )}
         </>
+
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
         <Pagination variant="outlined"
           count={totalPages}
