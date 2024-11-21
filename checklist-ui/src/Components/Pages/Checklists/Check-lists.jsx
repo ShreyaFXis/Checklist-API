@@ -126,8 +126,6 @@ const Checklists = () => {
       setLoadingItems((prev) => ({ ...prev, [checklistId]: false }));
     }
   };
-  
- 
 
   // Handle page change for checklist items
   const handleItemsPageChange = async (event, newPage, checklistId) => {
@@ -248,7 +246,6 @@ const Checklists = () => {
         }
       );
 
-      setChecklists((prev) => [...prev, response.data]);
       handleCloseModal();
       setTitleError(false); // Clear error after successful creation
       setNewChecklistTitle(""); // Reset field after successful creation
@@ -256,6 +253,16 @@ const Checklists = () => {
       toast.success("Checklist created successfully!", {
         position: "top-center",
       });
+
+       // Refetch data for the current page
+       const updatedResponse = await axios.get(
+        `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setChecklists(updatedResponse.data.results || []);
+    setTotalPages(Math.ceil(updatedResponse.data.count / itemsPerPage));
+
     } catch (err) {
       //console.log("err",err)
       if (err.status === 400) {
@@ -323,13 +330,17 @@ const Checklists = () => {
       );
 
       // Update checklistItems directly at the end for the selected checklist
-      setChecklistItems((prevItems) => ({
-        ...prevItems,
-        [selectedChecklistForItem]: [
-          ...(prevItems[selectedChecklistForItem] || []),
-          response.data,
-        ],
-      }));
+      // setChecklistItems((prevItems) => ({
+      //   ...prevItems,
+      //   [selectedChecklistForItem]: [
+      //     ...(prevItems[selectedChecklistForItem] || []),
+      //     response.data,
+      //   ],
+      // }));
+
+       // Refetch the updated checklist items
+       await fetchChecklistItems(selectedChecklistForItem, 1); // Refetch the first page of items
+
 
       handleCloseItemModal();
       setItemTextError(false);
