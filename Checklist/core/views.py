@@ -86,4 +86,8 @@ class ChecklistItemsListApiViews(ListAPIView):
     def get_queryset(self):
         checklist_id = self.kwargs.get('checklist_id')
         # Return the filtered queryset directly
-        return CheckListItems.objects.filter(user=self.request.user, checklist_id=checklist_id)
+        result=CheckListItems.objects.filter(user=self.request.user, checklist_id=checklist_id)
+        print("---pagination----")
+        print(result)
+        print("-----------------")
+        return result

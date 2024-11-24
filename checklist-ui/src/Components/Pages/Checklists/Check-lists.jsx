@@ -99,6 +99,14 @@ const Checklists = () => {
         }
       );
   
+      const page_count=Math.ceil(response.data.count / 10)
+
+      // If the requested page is out of range, fetch the last available page
+    if (page > page_count && page_count > 0) {
+      await fetchChecklistItems(checklistId, page_count);
+      return;
+    }
+
       // Update items and pagination state
       setChecklistItems((prevItems) => ({
         ...prevItems,
@@ -107,8 +115,7 @@ const Checklists = () => {
       
      // console.log("response.data.count:: ",response.data.count)
 
-      const page_count=Math.ceil(response.data.count / 10)
-      
+   
     setPaginationState((prevState) => ({
         ...prevState,
         [checklistId]: {
@@ -134,39 +141,39 @@ const Checklists = () => {
   };
   
 
+  const fetchChecklists = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("No token found. Please log in.");
+        setLoading(false);
+        return;
+      }
+      //console.log(page);
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      //console.log("Response : ");
+      //console.log(response.data);
+      setChecklists(response.data.results || []); // Paginated results
+      setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Total pages
+    } catch (err) {
+      setError(err.message || "Error fetching checklists.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // UseEffect for fetching checklists
   useEffect(() => {
-    const fetchChecklists = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          setError("No token found. Please log in.");
-          setLoading(false);
-          return;
-        }
-        //console.log(page);
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        //console.log("Response : ");
-        //console.log(response.data);
-        setChecklists(response.data.results || []); // Paginated results
-        setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Total pages
-      } catch (err) {
-        setError(err.message || "Error fetching checklists.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchChecklists();
-  }, [page]);
+  }, [page]); // Only when `page` changes
 
   // UseEffect for filtering checklists
   useEffect(() => {
@@ -402,13 +409,9 @@ const Checklists = () => {
           }
         );
 
-        const newItem = response.data; // New item from the server response
-
-        // Update checklistItems with the new item added to the front of the list
-        setChecklistItems((prevItems) => ({
-          ...prevItems,
-          [checklistId]: [...(prevItems[checklistId] || []), newItem],
-        }));
+         // Refetch items for the current checklist
+      const { currentPage } = paginationState[checklistId] || { currentPage: 1 };
+      await fetchChecklistItems(checklistId, currentPage);
 
         toast.success("Checklist item added successfully!");
         setNewItemText(""); // Clear input
@@ -434,13 +437,30 @@ const Checklists = () => {
         },
       });
   
-      // Update checklistItems state to remove the deleted item
-      setChecklistItems((prevItems) => ({
-        ...prevItems,
-        [checklistId]: prevItems[checklistId].filter((item) => item.id !== itemId),
-      }));
-  
-      toast.success("Checklist item deleted successfully!");
+    toast.success("Checklist item deleted successfully!");
+
+    //  the current pagination state
+    const { currentPage = 1, totalPages = 1 } = paginationState[checklistId] || {};
+
+    // Recalculate total pages
+    const newTotalPages = totalPages > 1 && (totalPages - 1) * 10 < (currentPage - 1) * 10
+      ? totalPages - 1
+      : totalPages;
+
+    const newPage = Math.min(currentPage, newTotalPages || 1);
+
+    // Update pagination state
+    setPaginationState((prevState) => ({
+      ...prevState,
+      [checklistId]: {
+        currentPage: newPage,
+        totalPages: newTotalPages,
+      },
+    }));
+
+    // Refetch items
+    await fetchChecklistItems(checklistId, newPage-1);
+
     } catch (error) {
       if (error.response && error.response.status === 401) {
         toast.error("Unauthorized. Please log in again.");
@@ -694,15 +714,11 @@ const Checklists = () => {
                           mb: "16px",
                           tableLayout: "fixed",
                           maxHeight: 300,
-                          overflowY: "scroll",
-                          paddingRight: "2px", // Space for the scrollbar
-                          border: "1px solid #333", // Border for the entire container
-                        
-                          borderBottom:
-                            checklistItems[checklist.id] &&
-                            checklistItems[checklist.id].length > 0
-                              ? "1px solid #333"
-                              : "none",
+                          overflowY: "auto",
+                          border:
+      checklistItems[checklist.id] && checklistItems[checklist.id].length > 0
+        ? "1px solid #333" // Border when items are present
+        : "none", // No border when no items
                         }}
                       >
                         {checklistItems[checklist.id] &&
