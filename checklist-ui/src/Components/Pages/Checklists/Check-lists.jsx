@@ -4,7 +4,8 @@ import { useSearchParams } from "react-router-dom";
 import {
   Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
-  LinearProgress, Pagination, 
+  LinearProgress, Pagination,
+  unstable_composeClasses, 
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -40,7 +41,7 @@ const Checklists = () => {
   const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
-  const [itemTextError, setItemTextError] = useState(false);
+  const [itemTextError, setItemTextError] = useState(false);0
   const [TextError, setTextError] = useState(false);
   const [checklistSelectError, setChecklistSelectError] = useState("");
   const [checklistItems, setChecklistItems] = useState({});
@@ -60,7 +61,7 @@ const Checklists = () => {
 
   const [totalPages, setTotalPages] = useState(0);
   const [paginationState, setPaginationState] = useState({}); // Manage pagination per checklist
-  
+  //console.log(paginationState)
 
   const [searchParams] = useSearchParams(); // Get URL search params
   const searchTerm = searchParams.get("search")?.toLowerCase() || ""; // Get search term and convert to lowercase
@@ -206,7 +207,7 @@ const Checklists = () => {
     try {
       const newIsChecked = !item.is_checked; 
       
-      console.log(`Toggling checkbox for item ${itemId} to ${newIsChecked}`);
+      //console.log(`Toggling checkbox for item ${itemId} to ${newIsChecked}`);
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}`,
         { is_checked: newIsChecked }, 
@@ -217,11 +218,8 @@ const Checklists = () => {
           },
         }
       );
-      
-      
-console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}/`);
-
-      console.log("API Response:", response.data);
+      // console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}/`);
+      // console.log("API Response:", response.data);
 
       // Revert the optimistic update on error
       setChecklistItems((prevItems) => {
@@ -240,7 +238,6 @@ console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/ite
     }
   };
   
-
   // Handle open item modal for checklist
   const handleOpenModal = () => {
     setOpenModal(true);
@@ -466,7 +463,7 @@ console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/ite
     }
   
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}`, {
+     const response = await axios.delete(`http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -474,28 +471,38 @@ console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/ite
   
     toast.success("Checklist item deleted successfully!");
 
-    //  the current pagination state
-    const { currentPage = 1, totalPages = 1 } = paginationState[checklistId] || {};
+     // Handle pagination state
+     const itemsPerPage = 10;
+     const { currentPage = 1, totalPages = 1, totalCount = 0 } = paginationState[checklistId] || {};
+ 
+     // Update total count after deletion
+     const newTotalCount = totalCount - 1;
+     //console.log("newTotalCount :: ", newTotalCount)
 
-    // Recalculate total pages
-    const newTotalPages = totalPages > 1 && (totalPages - 1) * 10 < (currentPage - 1) * 10
-      ? totalPages - 1
-      : totalPages;
+     // Recalculate total pages
+     const newTotalPages = Math.ceil(newTotalCount / itemsPerPage);
+    //console.log("newTotalPages :: ", newTotalPages)
 
-    const newPage = Math.min(currentPage, newTotalPages || 1);
+     // Determine the new page
+     const newPage = newTotalCount <= itemsPerPage
+       ? 1 
+       : (newTotalCount % itemsPerPage === 0 && currentPage > 1) ? currentPage - 1 : currentPage;
+     
+      // console.log(currentPage, newPage)
 
-    // Update pagination state
-    setPaginationState((prevState) => ({
-      ...prevState,
-      [checklistId]: {
-        currentPage: newPage,
-        totalPages: newTotalPages,
-      },
-    }));
-
-    // Refetch items
-    await fetchChecklistItems(checklistId, newPage-1);
-
+     // Update pagination state
+     setPaginationState((prevState) => ({
+       ...prevState,
+       [checklistId]: {
+         currentPage: newPage,
+         totalPages: newTotalPages || 1, 
+         totalCount: newTotalCount,
+       },
+     }));
+ 
+     // Refetch items
+     await fetchChecklistItems(checklistId, newPage);
+ 
     } catch (error) {
       if (error.response && error.response.status === 401) {
         toast.error("Unauthorized. Please log in again.");
@@ -748,13 +755,12 @@ console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/ite
                           margin: "4px auto",
                           mb: "16px",
                           tableLayout: "fixed",
-                          maxHeight: 300,
-                          overflowY: "auto",
-                          border:
-      checklistItems[checklist.id] && checklistItems[checklist.id].length > 0
-        ? "1px solid #333" // Border when items are present
-        : "none", // No border when no items
-                        }}
+                          //maxHeight: 350,
+                        //  overflowY: "auto",
+                          border: checklistItems[checklist.id] && checklistItems[checklist.id].length > 0
+                                    ? "1px solid #333" // Border when items are present
+                                    : "none", // No border when no items
+                          }}
                       >
                         {checklistItems[checklist.id] &&
                         checklistItems[checklist.id].length > 0 ? (
@@ -765,140 +771,147 @@ console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/ite
                             height: "100%", // Space between table and pagination
                           }}>
                             
-                          <Table  stickyHeader aria-label="sticky table"
-                            sx={{ bgcolor: "#eeeee", borderCollapse: "collapse" }}
-                          >
-                            <TableHead>
-                              <TableRow>
-                                {tableHeaders.map((header, index) => (
-                                  <TableCell
-                                    key={index}
-                                    sx={{ padding: "4px", ...header.sx }}
-                                  >
-                                    {header.label}
-                                  </TableCell>
-                                ))}
-                              </TableRow>
-                            </TableHead>
-                            <TableBody
-                              sx={{
-                                bgcolor: "#eeeee",
-                              }}
+                            
+                           <Box
+                           sx={{
+                            flex: "1 1 auto",
+                            overflowY: "auto",
+                            maxHeight: 350, // Scrollbar only for the table content
+                          }}
+                           >
+                             <Table  stickyHeader aria-label="sticky table"
+                              sx={{ bgcolor: "#eeeee", borderCollapse: "collapse" }}
                             >
-                              
-                              {(checklistItems[checklist.id] || []).map(
-                                (item, idx) => (
-                                  <TableRow
-                                    key={item.id}
-                                    sx={{
-                                      "&:hover": { backgroundColor: "#e8e8e8" },
-                                    }}
-                                  >
+                              <TableHead>
+                                <TableRow>
+                                  {tableHeaders.map((header, index) => (
                                     <TableCell
-                                      sx={{
-                                        borderBottom: "1px solid #ccc",
-                                        borderRight: "0.5px solid #333",
-                                        textAlign: "center",
-                                        padding: "4px",
-                                      }}
+                                      key={index}
+                                      sx={{ padding: "4px", ...header.sx }}
                                     >
-                                      <Checkbox
-                                        checked={item.is_checked}
-                                        onChange={() => {
-                                          setItem((prevItem) => ({ ...prevItem, is_checked: !prevItem.is_checked }));
-                                          handleCheckboxChange(checklist.id, item.id);
-                                        }}
-                                        size="small"
-                                      />
+                                      {header.label}
                                     </TableCell>
-                                    <TableCell
+                                  ))}
+                                </TableRow>
+                              </TableHead>
+                              <TableBody
+                                sx={{
+                                  bgcolor: "#eeeee",
+                                }}
+                              >
+                                
+                                {(checklistItems[checklist.id] || []).map(
+                                  (item, idx) => (
+                                    <TableRow
+                                      key={item.id}
                                       sx={{
-                                        color: "text.primary",
-                                        borderBottom: "1px solid #ccc",
-                                        borderRight: "0.5px solid #333",
-                                        textAlign: "center",
+                                        "&:hover": { backgroundColor: "#e8e8e8" },
                                       }}
                                     >
-                                      {idx + 1 + ((paginationState[checklist.id]?.currentPage || 1) - 1) * 10}
-
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{
-                                        color: "text.primary",
-                                        borderBottom: "1px solid #ccc",
-                                        borderRight: "0.5px solid #333",
-                                        textAlign: "center",
-                                        padding: "4px",
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          textDecoration: item.is_checked
-                                            ? "line-through"
-                                            : "none",
+                                      <TableCell
+                                        sx={{
+                                          borderBottom: "1px solid #ccc",
+                                          borderRight: "0.5px solid #333",
+                                          textAlign: "center",
+                                          padding: "4px",
                                         }}
                                       >
-                                        {item.text}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{
-                                        color: "text.primary",
-                                        borderBottom: "1px solid #ccc",
-                                        borderRight: "0.5px solid #333",
-                                        textAlign: "center",
-                                        padding: "3px",
-                                      }}
-                                    >
-                                      {new Date(
-                                        item.updated_on
-                                      ).toLocaleString()}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{
-                                        color: "text.primary",
-                                        borderBottom: "1px solid #ccc",
-                                        borderRight: "0.5px solid #333",
-                                        textAlign: "center",
-                                        padding: "5px",
+                                        <Checkbox
+                                          checked={item.is_checked}
+                                          onChange={() => {
+                                            setItem((prevItem) => ({ ...prevItem, is_checked: !prevItem.is_checked }));
+                                            handleCheckboxChange(checklist.id, item.id);
+                                          }}
+                                          size="small"
+                                        />
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          color: "text.primary",
+                                          borderBottom: "1px solid #ccc",
+                                          borderRight: "0.5px solid #333",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {idx + 1 + ((paginationState[checklist.id]?.currentPage || 1) - 1) * 10}
 
-                                      }}
-                                    >
-                                      <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
-                                        <EditIcon sx={{ cursor: "pointer" }} onClick={() => handleEditIconClick(checklist.id, item)} /> 
-                                        <DeleteIcon sx={{cursor: "pointer"}} onClick={() => handleDeleteItem(checklist.id, item.id)}/>
-                                      </Box>
-                                    </TableCell>
-                                  </TableRow>
-                                )
-                              )}
-                            </TableBody>
-                            
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          color: "text.primary",
+                                          borderBottom: "1px solid #ccc",
+                                          borderRight: "0.5px solid #333",
+                                          textAlign: "center",
+                                          padding: "4px",
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            textDecoration: item.is_checked
+                                              ? "line-through"
+                                              : "none",
+                                          }}
+                                        >
+                                          {item.text}
+                                        </span>
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          color: "text.primary",
+                                          borderBottom: "1px solid #ccc",
+                                          borderRight: "0.5px solid #333",
+                                          textAlign: "center",
+                                          padding: "3px",
+                                        }}
+                                      >
+                                        {new Date(
+                                          item.updated_on
+                                        ).toLocaleString()}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          color: "text.primary",
+                                          borderBottom: "1px solid #ccc",
+                                          borderRight: "0.5px solid #333",
+                                          textAlign: "center",
+                                          padding: "5px",
+
+                                        }}
+                                      >
+                                        <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
+                                          <EditIcon sx={{ cursor: "pointer" }} onClick={() => handleEditIconClick(checklist.id, item)} /> 
+                                          <DeleteIcon sx={{cursor: "pointer"}} onClick={() => handleDeleteItem(checklist.id, item.id)}/>
+                                        </Box>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                )}
+                              </TableBody>
+                            </Table>
+                           </Box>
 
 
-
-                          </Table>  
-                          <Box
-                          sx={{
-                            position: "sticky", // Makes the element sticky
-                            bottom: 0, // Sticks at the bottom of the scrollable container
-                            backgroundColor: "#fff", // Ensure it has a background color to cover content
-                            zIndex: 1, // Ensures it stays above the table
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            padding: "8px",
-                            borderTop: "1px solid #ccc", // Optional: Adds a top border for better visibility
-                          }}>
-  <Pagination
-    variant="outlined"
-    count={paginationState[checklist.id]?.totalPages || 1}
-    page={paginationState[checklist.id]?.currentPage || 1}
-    onChange={(event, newPage) =>
-      handleItemsPageChange(event, newPage, checklist.id)
-    }
-  />
-                          </Box>
+                              <Box
+                              sx={{
+                                position: "sticky", // Makes the element sticky
+                                bottom: 0, // Sticks at the bottom of the scrollable container
+                                backgroundColor: "#fff", // Ensure it has a background color to cover content
+                                zIndex: 1, // Ensures it stays above the table
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: "8px",
+                                borderTop: "1px solid #ccc", // Optional: Adds a top border for better visibility
+                                }}>
+                                <Pagination
+                                  variant="outlined"
+                                  count={paginationState[checklist.id]?.totalPages || 1}
+                                  page={paginationState[checklist.id]?.currentPage || 1}
+                                  onChange={(event, newPage) =>
+                                    handleItemsPageChange(event, newPage, checklist.id)
+                                  }
+                                />
+                              </Box>
                           </Box>
                           
                         ) : (
