@@ -49,7 +49,7 @@ const Checklists = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [expandedAccordions, setExpandedAccordions] = useState([]);
   const [checklistId, setChecklistId] = useState(null);
-
+  const [item, setItem] = useState([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [selectedItemText, setSelectedItemText] = useState('');  // Store the item text only
   const [currentChecklistId, setCurrentChecklistId] = useState(null);  // Store checklist ID
@@ -198,13 +198,48 @@ const Checklists = () => {
   
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       alert("No token found. Please log in.");
       return;
     }
-    // Logic for handling checkbox change
+  
+    try {
+      const newIsChecked = !item.is_checked; 
+      
+      console.log(`Toggling checkbox for item ${itemId} to ${newIsChecked}`);
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}`,
+        { is_checked: newIsChecked }, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      
+console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}/`);
+
+      console.log("API Response:", response.data);
+
+      // Revert the optimistic update on error
+      setChecklistItems((prevItems) => {
+        const revertedItems = prevItems[checklistId].map((item) =>
+          item.id === itemId ? { ...item, is_checked: !item.is_checked } : item
+        );
+        return { ...prevItems, [checklistId]: revertedItems };
+      });
+
+
+    } catch (error) {
+      console.error("Error updating checkbox:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to update checkbox."
+      );
+    }
   };
+  
 
   // Handle open item modal for checklist
   const handleOpenModal = () => {
@@ -725,9 +760,9 @@ const Checklists = () => {
                         checklistItems[checklist.id].length > 0 ? (
                           <Box sx={{
                             display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    height: "100%", // Space between table and pagination
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            height: "100%", // Space between table and pagination
                           }}>
                             
                           <Table  stickyHeader aria-label="sticky table"
@@ -769,12 +804,10 @@ const Checklists = () => {
                                     >
                                       <Checkbox
                                         checked={item.is_checked}
-                                        onChange={() =>
-                                          handleCheckboxChange(
-                                            checklist.id,
-                                            item.id
-                                          )
-                                        }
+                                        onChange={() => {
+                                          setItem((prevItem) => ({ ...prevItem, is_checked: !prevItem.is_checked }));
+                                          handleCheckboxChange(checklist.id, item.id);
+                                        }}
                                         size="small"
                                       />
                                     </TableCell>
