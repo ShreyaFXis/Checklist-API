@@ -41,6 +41,36 @@ class ChecklistsApiViews(ListCreateAPIView):
         if self.request.query_params.get('titles_only') == 'true':
             context['titles_only'] = True
         return context
+    
+    def delete(self, request, *args, **kwargs):
+        '''
+        Handle DELETE for bulk deletion.
+        '''
+        checklist_ids = request.data.get("checklist_ids", [])
+
+        # Ensure checklist_ids is a list
+        if not isinstance(checklist_ids, list):
+            return Response(
+                {"error": "checklist_ids must be a list of integers."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Filtering the checklists belonging to the current user
+        user_checklists = CheckList.objects.filter(id__in=checklist_ids, user=request.user)
+
+        if not user_checklists.exists():
+            return Response(
+                {"error": "No valid checklists found for deletion."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Delete counts
+        deleted_count, _ = user_checklists.delete()
+
+        return Response(
+            {"message": f"{deleted_count} checklists deleted successfully."},
+            status=status.HTTP_200_OK,
+        )
 
 
 # class to check single id of checklist
@@ -87,7 +117,7 @@ class ChecklistItemsListApiViews(ListAPIView):
         checklist_id = self.kwargs.get('checklist_id')
         # Return the filtered queryset directly
         result=CheckListItems.objects.filter(user=self.request.user, checklist_id=checklist_id)
-        print("---pagination----")
-        print(result)
-        print("-----------------")
+     #   print("---pagination----")
+      #  print(result)
+       # print("-----------------")
         return result

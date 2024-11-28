@@ -41,7 +41,7 @@ const Checklists = () => {
   const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
-  const [itemTextError, setItemTextError] = useState(false);0
+  const [itemTextError, setItemTextError] = useState(false);
   const [TextError, setTextError] = useState(false);
   const [checklistSelectError, setChecklistSelectError] = useState("");
   const [checklistItems, setChecklistItems] = useState({});

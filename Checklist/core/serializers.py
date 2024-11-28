@@ -34,7 +34,7 @@ class CheckListSerializer(serializers.ModelSerializer):
         return representation
     
     def validate(self, data):
-        print("Running validate method")  # Debugging line
+      #  print("Running validate method")  # Debugging line
         user = self.context['request'].user
         title = data.get('title')
         checklist_id = self.instance.id if self.instance else None
