@@ -4,8 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
-  LinearProgress, Pagination,
-  unstable_composeClasses, 
+  LinearProgress, Pagination, IconButton, 
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -68,7 +67,68 @@ const Checklists = () => {
 
   const [openModal, setOpenModal] = useState(false);
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
- 
+
+  //Multiple delete
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedChecklists, setSelectedChecklists] = React.useState([]);
+
+
+  // handle the edit button
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleCancel = () => {
+    setIsEditMode(false);
+    setSelectedChecklists([]);
+  };
+
+  // handle checkbox selection for checklists
+  const handleChecklistSelection = (checklistId) => {
+    setSelectedChecklists((prevSelected) =>
+      prevSelected.includes(checklistId)
+        ? prevSelected.filter((id) => id !== checklistId) // Remove if already selected
+        : [...prevSelected, checklistId] // Add if not selected
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedChecklists.length === 0) {
+      alert("No checklists selected for deletion.");
+      return;
+    }
+  
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("No token found. Please log in.");
+        return;
+      }
+      console.log("token :: ", token);
+  
+      
+      const response = await axios.delete(`http://127.0.0.1:8000/api/checklists`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { checklist_ids: selectedChecklists }, 
+      });
+  
+      console.log("response :: ", response);
+      if (response.status === 200) {
+        // Remove deleted checklists from the UI
+        setFilteredChecklists((prevChecklists) =>
+          prevChecklists.filter(
+            (checklist) => !selectedChecklists.includes(checklist.id)
+          )
+        );
+        setSelectedChecklists([]); // Clear the selection
+        toast.success(response.data.message || "Checklists deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Error deleting checklists:", error);
+      toast.error(error.response?.data?.error || "Failed to delete checklists.");
+    }
+  };
+  
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -196,7 +256,6 @@ const Checklists = () => {
     setPage(newPage);
   };
 
-  
   const handleCheckboxChange = async (checklistId, itemId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -642,17 +701,76 @@ const Checklists = () => {
       <Box sx={{ bgcolor: "background.default", p: 2 }}>
         <div
           className="wrapper-class"
-          style={{ display: "flex", alignContent: "stretch" }}
+          style={{ display: "flex" ,alignContent: "strech", alignItems:"center" }}
         >
 
-          <Typography
-            variant="h4"
-            // sx={{ textAlign: 'left', color: 'text.primary', mb: 2 }}
-          >
-            CheckLists
-          </Typography>
+      <EditIcon
+        style={{ cursor: "pointer" }}
+        onClick={toggleEditMode}
+      />
+
+        {isEditMode && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            marginRight:"6px",
+            marginLeft:"15px"
+          }}
+        >
 
           <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            sx={{ textTransform: "none", marginRight: "10px", position: "relative" }}
+            onClick={handleDeleteSelected}
+          >
+            Delete
+            {selectedChecklists.length > 0 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "-5px",
+                  right: "-5px",
+                  backgroundColor: "red",
+                  color: "white",
+                  borderRadius: "50%",
+                  width: "20px",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                }}
+              >
+                {selectedChecklists.length}
+              </Box>
+            )}
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleCancel}
+            sx={{
+              textTransform: "none",
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+
+          <div  style={{
+            display: "flex",
+            flexDirection: "row", 
+            alignItems: "flex-end", 
+            marginLeft: "auto",
+          }}>
+
+            <Button
             variant="contained"
             sx={{
               textTransform: "none", // Keeps the text in sentence case
@@ -672,54 +790,68 @@ const Checklists = () => {
             onClick={handleOpenModal}
           >
             Create Checklist
-          </Button>
+            </Button>
 
-          <Button
-            variant="contained"
-            sx={{
-              textTransform: "none", // Keeps the text in sentence case
-              background: "linear-gradient(270deg, #ec6ead,#3494e6)", // Initial gradient
-              backgroundSize: "200% 200%", // Double the background size to enable the motion effect
-              marginBottom: "16px", // Adds space below the button
-              color: "#000", // Change text color to suit the background
-              transition: "background-position 0.5s ease", // Smooth transition for the gradient movement
-              backgroundPosition: "0% 50%", // Start position of the background gradient
-              "&:hover": {
-                backgroundPosition: "100% 50%", // On hover, shift the background gradient
-                background: "linear-gradient(270deg, #3494e6, #ec6ead)",
-              },
-              marginLeft: "25px", // Align the button to the right
-              display: "block", // Ensure the button takes block space so marginLeft works
-            }}
-            onClick={() => handleOpenItemModal(null)}
-          >
-            Create Checklist-Item
-          </Button>
+            <Button
+              variant="contained"
+              sx={{
+                textTransform: "none", // Keeps the text in sentence case
+                background: "linear-gradient(270deg, #ec6ead,#3494e6)", // Initial gradient
+                backgroundSize: "200% 200%", // Double the background size to enable the motion effect
+                marginBottom: "16px", // Adds space below the button
+                color: "#000", // Change text color to suit the background
+                transition: "background-position 0.5s ease", // Smooth transition for the gradient movement
+                backgroundPosition: "0% 50%", // Start position of the background gradient
+                "&:hover": {
+                  backgroundPosition: "100% 50%", // On hover, shift the background gradient
+                  background: "linear-gradient(270deg, #3494e6, #ec6ead)",
+                },
+                marginLeft: "25px", // Align the button to the right
+                display: "block", // Ensure the button takes block space so marginLeft works
+              }}
+              onClick={() => handleOpenItemModal(null)}
+            >
+              Create Checklist-Item
+            </Button>
+          </div>
         </div>
 
         <>
+        
           {filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
-              <Accordion
+              <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
+                {/* Checkbox placed outside the Accordion */}
+                {isEditMode && (
+                  <Checkbox 
+                    size="small" 
+                    sx={{ marginRight: 1, flexDirection: "row"}}
+                    checked={selectedChecklists.includes(checklist.id)}
+                    onChange={() => handleChecklistSelection(checklist.id)} 
+                  />
+                )}
+                <Accordion
                 key={checklist.id}
                 onChange={handleAccordionChange(checklist.id)}
                 expanded={expandedAccordions.includes(checklist.id)}
-                sx={{ margin: "1px 0" }}
+                sx={{ margin: "1px 0", width: "100%" }}
               >
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   sx={{
                     cursor: "pointer",
                     color: "text.primary",
-                    minHeight: 40,
+                    minHeight: 15,
+                    margin : "0"
                   }}
                 >
+      
                   <Typography
                     sx={{
                       fontWeight: expandedAccordions.includes(checklist.id)
                         ? "bold"
                         : "normal",
-                      fontSize: "0.9rem",
+                      fontSize: "0.9 rem",
                     }}
                   >
                     {` ${checklist.title}`}
@@ -735,6 +867,7 @@ const Checklists = () => {
                       ? "none"
                       : "40px", // Adjust height when collapsed
                     overflow: "hidden", // Hide overflow when collapsed
+                    margin: '6px'
                   }}
                 >
                   {loadingItems[checklist.id] ? (
@@ -747,7 +880,7 @@ const Checklists = () => {
                     </>
                   ) : (
                     <>
-                      
+
                       {/* Table for checklist items */}
                       <TableContainer
                         sx={{
@@ -770,8 +903,7 @@ const Checklists = () => {
                             justifyContent: "space-between",
                             height: "100%", // Space between table and pagination
                           }}>
-                            
-                            
+                             
                            <Box
                            sx={{
                             flex: "1 1 auto",
@@ -939,6 +1071,7 @@ const Checklists = () => {
                           </Box>
                         )}
                       </TableContainer>
+
                     </>
                   )}
 
@@ -970,6 +1103,7 @@ const Checklists = () => {
                   </Button>
                 </AccordionDetails>
               </Accordion>
+              </div>
             ))
           ) : (
             <Typography variant="h6" align="center" sx={{ margin: 2 }}>
@@ -979,12 +1113,12 @@ const Checklists = () => {
         </>
 
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-        <Pagination variant="outlined"
-          count={totalPages}
-          page={page}
-          onChange={handleChangePage}
-          
-        />
+          <Pagination variant="outlined"
+            count={totalPages}
+            page={page}
+            onChange={handleChangePage}
+            
+          />
         </Box>
       </Box>
 

@@ -81,8 +81,8 @@ useEffect(() => {
             <IconButton color="inherit" aria-label="open drawer" onClick={toggleDrawer} edge="start">
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" component="div">
-              Checklist API
+            <Typography variant="h4" component="div">
+              CheckLists
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>

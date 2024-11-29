@@ -60,7 +60,7 @@ class ChecklistsApiViews(ListCreateAPIView):
 
         if not user_checklists.exists():
             return Response(
-                {"error": "No valid checklists found for deletion."},
+                {"error": "No valid checklists found to deletion."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
