@@ -104,7 +104,7 @@ const Checklists = () => {
         toast.error("No token found. Please log in.");
         return;
       }
-      console.log("token :: ", token);
+      //console.log("token :: ", token);
   
       
       const response = await axios.delete(`http://127.0.0.1:8000/api/checklists`, {
@@ -112,15 +112,30 @@ const Checklists = () => {
         data: { checklist_ids: selectedChecklists }, 
       });
   
-      console.log("response :: ", response);
+      //console.log("response :: ", response);
+      
       if (response.status === 200) {
-        // Remove deleted checklists from the UI
-        setFilteredChecklists((prevChecklists) =>
-          prevChecklists.filter(
+        // Remove deleted checklists from filteredChecklists
+        setFilteredChecklists((prevFilteredChecklists) => {
+          const updatedChecklists = prevFilteredChecklists.filter(
             (checklist) => !selectedChecklists.includes(checklist.id)
-          )
-        );
-        setSelectedChecklists([]); // Clear the selection
+          );
+  
+          const itemsPerPage = 10; // Number of checklists per page
+          const totalRemainingItems = updatedChecklists.length;
+          const totalPages = Math.ceil(totalRemainingItems / itemsPerPage);
+  
+          // Adjust the current page if the current one becomes empty
+          if (updatedChecklists.length === 0 && currentPage > 1) {
+            setCurrentPage((prevPage) => prevPage - 1);
+          } else if (currentPage > totalPages) {
+            setCurrentPage(totalPages); // Adjust to the last valid page
+          }
+  
+          return updatedChecklists;
+        });
+  
+        setSelectedChecklists([]); // Clear selection
         toast.success(response.data.message || "Checklists deleted successfully!");
       }
     } catch (error) {
@@ -128,7 +143,17 @@ const Checklists = () => {
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
-  
+
+  // Pagination state and logic
+const [currentPage, setCurrentPage] = React.useState(1);
+
+
+// Paginate checklists
+const paginatedChecklists = React.useMemo(() => {
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
+}, [filteredChecklists, currentPage, itemsPerPage]);
+
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -1350,5 +1375,119 @@ const Checklists = () => {
     </ThemeProvider>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default Checklists;
