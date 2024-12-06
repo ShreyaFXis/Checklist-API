@@ -71,7 +71,8 @@ const Checklists = () => {
   //Multiple delete
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedChecklists, setSelectedChecklists] = React.useState([]);
-
+    // Pagination state and logic
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   // handle the edit button
   const toggleEditMode = () => {
@@ -112,30 +113,35 @@ const Checklists = () => {
         data: { checklist_ids: selectedChecklists }, 
       });
   
-      //console.log("response :: ", response);
-      
+
       if (response.status === 200) {
-        // Remove deleted checklists from filteredChecklists
         setFilteredChecklists((prevFilteredChecklists) => {
           const updatedChecklists = prevFilteredChecklists.filter(
             (checklist) => !selectedChecklists.includes(checklist.id)
           );
   
-          const itemsPerPage = 10; // Number of checklists per page
           const totalRemainingItems = updatedChecklists.length;
+  
+          // Calculate total pages
           const totalPages = Math.ceil(totalRemainingItems / itemsPerPage);
   
-          // Adjust the current page if the current one becomes empty
-          if (updatedChecklists.length === 0 && currentPage > 1) {
-            setCurrentPage((prevPage) => prevPage - 1);
-          } else if (currentPage > totalPages) {
-            setCurrentPage(totalPages); // Adjust to the last valid page
+          // Check if the current page is now empty
+          const startIndex = (page - 1) * itemsPerPage;
+          const currentPageItems = updatedChecklists.slice(startIndex, startIndex + itemsPerPage);
+  
+          if (currentPageItems.length === 0) {
+            // Move to the last valid page if items remain
+            if (totalRemainingItems > 0) {
+              setPage((prevPage) => Math.min(prevPage, totalPages));
+            } else {
+              setPage(1); // Redirect to Page 1 if no items are left
+            }
           }
   
           return updatedChecklists;
         });
   
-        setSelectedChecklists([]); // Clear selection
+        setSelectedChecklists([]); // Clear selected items
         toast.success(response.data.message || "Checklists deleted successfully!");
       }
     } catch (error) {
@@ -143,17 +149,11 @@ const Checklists = () => {
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
-
-  // Pagination state and logic
-const [currentPage, setCurrentPage] = React.useState(1);
-
-
 // Paginate checklists
 const paginatedChecklists = React.useMemo(() => {
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const startIndex = (page - 1) * itemsPerPage;
   return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
-}, [filteredChecklists, currentPage, itemsPerPage]);
-
+}, [filteredChecklists, page]);
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -222,7 +222,7 @@ const paginatedChecklists = React.useMemo(() => {
 
   // Handle page change for checklist items
   const handleItemsPageChange = async (event, newPage, checklistId) => {
-    console.log(`Fetching page ${newPage} for checklist ${checklistId}`); // Debug log
+   // console.log(`Fetching page ${newPage} for checklist ${checklistId}`); // Debug log
     await fetchChecklistItems(checklistId, newPage); // Fetch data directly for the new page
   };
   
@@ -302,8 +302,7 @@ const paginatedChecklists = React.useMemo(() => {
           },
         }
       );
-      // console.log("API URL:", `http://127.0.0.1:8000/api/checklists/${checklistId}/items/${itemId}/`);
-      // console.log("API Response:", response.data);
+      
 
       // Revert the optimistic update on error
       setChecklistItems((prevItems) => {
@@ -1375,119 +1374,5 @@ const paginatedChecklists = React.useMemo(() => {
     </ThemeProvider>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default Checklists;
