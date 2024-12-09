@@ -112,43 +112,49 @@ const Checklists = () => {
         headers: { Authorization: `Bearer ${token}` },
         data: { checklist_ids: selectedChecklists }, 
       });
-  
 
       if (response.status === 200) {
         setFilteredChecklists((prevFilteredChecklists) => {
+          // Filter out the deleted checklists
           const updatedChecklists = prevFilteredChecklists.filter(
             (checklist) => !selectedChecklists.includes(checklist.id)
           );
-  
+          console.log("updatedChecklists::", updatedChecklists);
+      
+          // Calculate total items and total pages
           const totalRemainingItems = updatedChecklists.length;
-  
-          // Calculate total pages
           const totalPages = Math.ceil(totalRemainingItems / itemsPerPage);
-  
-          // Check if the current page is now empty
+          console.log("totalRemainingItems::", totalRemainingItems);
+          console.log("totalPages::", totalPages);
+      
+          // Get items for the current page after deletion
           const startIndex = (page - 1) * itemsPerPage;
-          const currentPageItems = updatedChecklists.slice(startIndex, startIndex + itemsPerPage);
-  
-          if (currentPageItems.length === 0) {
-            // Move to the last valid page if items remain
-            if (totalRemainingItems > 0) {
-              setPage((prevPage) => Math.min(prevPage, totalPages));
-            } else {
-              setPage(1); // Redirect to Page 1 if no items are left
-            }
+          console.log("startIndex::", startIndex);
+      
+          // Check if the current page is empty after deletion
+          if (totalRemainingItems === 0) {
+            // If all items are deleted, go to the previous page, but not below page 1
+            setPage((prevPage) => Math.max(prevPage - 1, 1));
           }
-  
-          return updatedChecklists;
+      
+          return updatedChecklists; // Update the filteredChecklists
         });
-  
-        setSelectedChecklists([]); // Clear selected items
-        toast.success(response.data.message || "Checklists deleted successfully!");
+      
+        // Clear the selected checklists
+        setSelectedChecklists([]);
+      
+        // Show success message
+        toast.success(
+          `${selectedChecklists.length} checklist(s) deleted successfully!`
+        );
       }
+      
     } catch (error) {
       console.error("Error deleting checklists:", error);
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
+
 // Paginate checklists
 const paginatedChecklists = React.useMemo(() => {
   const startIndex = (page - 1) * itemsPerPage;
@@ -347,13 +353,6 @@ const paginatedChecklists = React.useMemo(() => {
       return;
     }
 
-    /* const existingTitles = checklists.map(checklist => checklist.title);
-    if (existingTitles.includes(newChecklistTitle)) {
-      toast.error("You already have a checklist with this title.", {
-        position: 'top-center'
-      });
-      return;
-    }*/
 
     try {
       const response = await axios.post(
