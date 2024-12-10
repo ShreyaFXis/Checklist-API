@@ -6,6 +6,8 @@ import {
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
   LinearProgress, Pagination, IconButton, 
 } from "@mui/material";
+import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
+import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast, ToastContainer } from "react-toastify";
@@ -13,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FetchChecklistItems from "./FetchChecklistItems";
 
 import noItems from "../../../Assests/NoItemsYet.gif";
 
@@ -73,10 +76,20 @@ const Checklists = () => {
   const [selectedChecklists, setSelectedChecklists] = React.useState([]);
     // Pagination state and logic
   const [currentPage, setCurrentPage] = React.useState(1);
+  const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
 
-  // handle the edit button
+  // handle the checkbox button
   const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
+    setIsEditMode((prevIsEditMode) => {
+      if (!prevIsEditMode) {
+        setSelectedChecklists(allChecklistIds); // Select all
+      } else {
+        setSelectedChecklists([]); // Unselect all
+      }
+      //console.log("IsEditMode :: ", isEditMode)
+      return !prevIsEditMode;
+      
+    });
   };
 
   const handleCancel = () => {
@@ -88,8 +101,8 @@ const Checklists = () => {
   const handleChecklistSelection = (checklistId) => {
     setSelectedChecklists((prevSelected) =>
       prevSelected.includes(checklistId)
-        ? prevSelected.filter((id) => id !== checklistId) // Remove if already selected
-        : [...prevSelected, checklistId] // Add if not selected
+        ? prevSelected.filter((id) => id !== checklistId)
+        : [...prevSelected, checklistId]
     );
   };
 
@@ -119,17 +132,17 @@ const Checklists = () => {
           const updatedChecklists = prevFilteredChecklists.filter(
             (checklist) => !selectedChecklists.includes(checklist.id)
           );
-          console.log("updatedChecklists::", updatedChecklists);
+          //console.log("updatedChecklists::", updatedChecklists);
       
           // Calculate total items and total pages
           const totalRemainingItems = updatedChecklists.length;
           const totalPages = Math.ceil(totalRemainingItems / itemsPerPage);
-          console.log("totalRemainingItems::", totalRemainingItems);
-          console.log("totalPages::", totalPages);
+          // console.log("totalRemainingItems::", totalRemainingItems);
+          // console.log("totalPages::", totalPages);
       
           // Get items for the current page after deletion
           const startIndex = (page - 1) * itemsPerPage;
-          console.log("startIndex::", startIndex);
+          //console.log("startIndex::", startIndex);
       
           // Check if the current page is empty after deletion
           if (totalRemainingItems === 0) {
@@ -142,6 +155,7 @@ const Checklists = () => {
       
         // Clear the selected checklists
         setSelectedChecklists([]);
+        //setIsEditMode(true); // Exit edit mode after deletion
       
         // Show success message
         toast.success(
@@ -232,7 +246,6 @@ const paginatedChecklists = React.useMemo(() => {
     await fetchChecklistItems(checklistId, newPage); // Fetch data directly for the new page
   };
   
-
   const fetchChecklists = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -267,7 +280,17 @@ const paginatedChecklists = React.useMemo(() => {
     fetchChecklists();
   }, [page]); // Only when `page` changes
 
-  // UseEffect for filtering checklists
+/*---------
+<FetchChecklistItems
+  checklistId={checklistId}
+  page={page}
+  setLoadingItems={setLoadingItems}
+  setChecklistItems={setChecklistItems}
+  setPaginationState={setPaginationState}
+/>
+-------*/
+ 
+// UseEffect for filtering checklists
   useEffect(() => {
     const filtered = searchTerm
       ? checklists.filter((checklist) =>
@@ -610,7 +633,6 @@ const paginatedChecklists = React.useMemo(() => {
     setSelectedItemText(e.target.value);  // Update the text in the state
   };
 
-
   // Submit the updated checklist item text to the backend
   const handleUpdateItem = async () => {
     const token = localStorage.getItem("token");
@@ -657,7 +679,6 @@ const paginatedChecklists = React.useMemo(() => {
     }
   };
   
-
   if (loading) return <LinearProgress color="secondary" />;
   if (error)
     return (
@@ -727,62 +748,53 @@ const paginatedChecklists = React.useMemo(() => {
           style={{ display: "flex" ,alignContent: "strech", alignItems:"center" }}
         >
 
-      <EditIcon
+      <Checkbox size="small"
         style={{ cursor: "pointer" }}
-        onClick={toggleEditMode}
+        checked={isEditMode}
+        onChange={toggleEditMode}
+        icon={<CheckBoxOutlineBlankOutlinedIcon  />}
+        checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
       />
 
-        {isEditMode && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            marginRight:"6px",
-            marginLeft:"15px"
-          }}
-        >
+            {isEditMode && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "flex-start",
+                marginRight:"10px",
+                marginLeft:"15px"
+              }}
+            >
 
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            sx={{ textTransform: "none", marginRight: "10px", position: "relative" }}
-            onClick={handleDeleteSelected}
-          >
-            Delete
-            {selectedChecklists.length > 0 && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "-5px",
-                  right: "-5px",
-                  backgroundColor: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "12px",
-                }}
-              >
-                {selectedChecklists.length}
-              </Box>
-            )}
-          </Button>
-
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleCancel}
-            sx={{
-              textTransform: "none",
-            }}
-          >
-            Cancel
-          </Button>
+            <IconButton
+              color="error"
+              sx={{ position: "relative", padding: "8px" }}
+              onClick={handleDeleteSelected}
+            >
+              <DeleteIcon />
+              {selectedChecklists.length > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    backgroundColor: "red",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                  }}
+                >
+                  {selectedChecklists.length}
+                </Box>
+              )}
+            </IconButton>
+  
         </div>
       )}
 
@@ -845,7 +857,7 @@ const paginatedChecklists = React.useMemo(() => {
             filteredChecklists.map((checklist) => (
               <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
                 {/* Checkbox placed outside the Accordion */}
-                {isEditMode && (
+                { (
                   <Checkbox 
                     size="small" 
                     sx={{ marginRight: 1, flexDirection: "row"}}
