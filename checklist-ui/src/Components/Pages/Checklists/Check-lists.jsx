@@ -75,8 +75,10 @@ const Checklists = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedChecklists, setSelectedChecklists] = React.useState([]);
     // Pagination state and logic
-  const [currentPage, setCurrentPage] = React.useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
+  const [showMore, setShowMore] = useState(true); // Add this state to control the "Show More" button visibility
+
 
   // handle the checkbox button
   const toggleEditMode = () => {
@@ -428,6 +430,7 @@ const paginatedChecklists = React.useMemo(() => {
   // Handle open item modal for checklist items
   const handleOpenItemModal = (checklistId) => {
     setSelectedChecklistForItem(checklistId);
+    console.log("setSelectedChecklistForItem:: ",selectedChecklistForItem)
     setOpenItemModal(true);
   };
 
@@ -465,6 +468,7 @@ const paginatedChecklists = React.useMemo(() => {
           text: newChecklistItemText,
           checklist: selectedChecklistForItem,
           //checklist : checklistId,
+          
         },
         {
           headers: {
@@ -473,6 +477,8 @@ const paginatedChecklists = React.useMemo(() => {
         }
       );
 
+      console.log("selectedChecklistForItem::",selectedChecklistForItem)
+      console.log("response.data::",response.data)
       // Update checklistItems directly at the end for the selected checklist
       // setChecklistItems((prevItems) => ({
       //   ...prevItems,
@@ -503,6 +509,39 @@ const paginatedChecklists = React.useMemo(() => {
       );
     }
   };
+
+ // Handle drop menu show more in create checklist items
+ const handleShowMore = async () => {
+  try {
+    const nextPage = currentPage + 1; // Increment the page number
+    const response = await axios.get(`http://127.0.0.1:8000/api/checklists?page=${nextPage}&titles_only=true`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (response.data.results.length > 0) {
+      setChecklists((prev) => {
+        // Avoid duplicating the items by combining only unique checklists
+        const newChecklists = response.data.results.filter(item => !prev.some(existingItem => existingItem.id === item.id));
+        return [...prev, ...newChecklists];
+        console.log("newChecklists ::",newChecklists)
+      });
+
+      setCurrentPage(nextPage); // Update page number
+      setShowMore(response.data.next !== null); // Update showMore state
+      console.log("ShowMore :: ",showMore)
+      toast.success("More checklists loaded!", { position: "bottom-center" });
+    } else {
+      setShowMore(false); // No more items to load
+      toast.info("No more checklists to load.", { position: "bottom-center" });
+    }
+  } catch (error) {
+    toast.error("Unable to load more checklists.", { position: "bottom-center" });
+  }
+};
+
+
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -553,7 +592,7 @@ const paginatedChecklists = React.useMemo(() => {
         toast.success("Checklist item added successfully!");
         setNewItemText(""); // Clear input
         handleCloseDialog(); // Close dialog on success
-      } catch (error) {
+      } catch (error) { 
         toast.error("Failed to add checklist item.");
       }
     }
@@ -1060,15 +1099,15 @@ const paginatedChecklists = React.useMemo(() => {
 
                               <Box
                               sx={{
-                                position: "sticky", // Makes the element sticky
-                                bottom: 0, // Sticks at the bottom of the scrollable container
-                                backgroundColor: "#fff", // Ensure it has a background color to cover content
-                                zIndex: 1, // Ensures it stays above the table
+                                position: "sticky", 
+                                bottom: 0,
+                                backgroundColor: "#fff", 
+                                zIndex: 1, 
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: "center",
                                 padding: "8px",
-                                borderTop: "1px solid #ccc", // Optional: Adds a top border for better visibility
+                                borderTop: "1px solid #ccc", 
                                 }}>
                                 <Pagination
                                   variant="outlined"
@@ -1136,6 +1175,7 @@ const paginatedChecklists = React.useMemo(() => {
                   >
                     Add Item
                   </Button>
+                  
                 </AccordionDetails>
               </Accordion>
               </div>
@@ -1261,17 +1301,27 @@ const paginatedChecklists = React.useMemo(() => {
           <TextField
             select
             label="Select Checklist"
-            value={selectedChecklistForItem}
+            value={selectedChecklistForItem || ''}  // Ensure it defaults to an empty string if undefined
             onChange={(e) => {
-              setSelectedChecklistForItem(e.target.value);
-              setChecklistSelectError(false);
+              setSelectedChecklistForItem(e.target.value);  // Update the selected checklist
+              setChecklistSelectError(false);  // Clear the error when the user selects a checklist
             }}
             fullWidth
             sx={{ mt: 2 }}
-            error={!!checklistSelectError}
-            helperText={checklistSelectError}
+            error={!!checklistSelectError}  // Display error if checklist is not selected
+            helperText={checklistSelectError}  // Error message when no checklist is selected
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  style: {
+                    maxHeight: '300px',  // Set dropdown height
+                    overflowY: 'auto',  // Enable scrolling
+                  },
+                },
+              },
+            }}
           >
-           {Array.isArray(checklists) && checklists.length > 0 ? (
+            {Array.isArray(checklists) && checklists.length > 0 ? (
               checklists.map((checklist) => (
                 <MenuItem key={checklist.id} value={checklist.id}>
                   {checklist.title}
@@ -1281,6 +1331,8 @@ const paginatedChecklists = React.useMemo(() => {
               <MenuItem disabled>No Checklists Available</MenuItem>
             )}
           </TextField>
+
+
         </DialogContent>
 
         <Divider sx={{ my: 0.5 }} />
