@@ -79,6 +79,11 @@ const Checklists = () => {
   const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
   
   const [hasMoreChecklists, setHasMoreChecklists] = useState(true);
+  // State for dropdown-specific checklists
+  const [dropdownChecklists, setDropdownChecklists] = useState([]);
+  const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
+  const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
+
 
 
   // handle the checkbox button
@@ -511,35 +516,40 @@ const paginatedChecklists = React.useMemo(() => {
     }
   };
 
- // Handle drop menu show more in create checklist items
- const fetchMoreChecklists = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("No token found. Please log in.");
-    return;
-  }
-
-  try {
-    const response = await axios.get(
-      `http://127.0.0.1:8000/api/checklists?page=${currentPage + 1}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    if (response.data.results.length > 0) {
-      setChecklists((prevChecklists) => [...prevChecklists, ...response.data.results]);
-      setCurrentPage((prevPage) => prevPage + 1);
-    } else {
-      setHasMoreChecklists(false); // No more checklists
+  // Function to fetch more checklists for the dropdown menu
+  const fetchMoreDropdownChecklists = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("No token found. Please log in.");
+      return;
     }
-  } catch (error) {
-    console.error("Error fetching more checklists:", error);
-  }
-};
 
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}&titles_only=true`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
+      if (response.data.results.length > 0) {
+        setDropdownChecklists((prevDropdownChecklists) => {
+          const newChecklists = [...prevDropdownChecklists, ...response.data.results];
+          return newChecklists;
+        });
+        setCurrentDropdownPage((prevPage) => prevPage + 1);
+      } else {
+        setHasMoreDropdownChecklists(false); // No more checklists to load
+      }
+    } catch (error) {
+      console.error("Error fetching more dropdown checklists:", error);
+    }
+  };
 
+  useEffect(() => {
+    console.log("Dropdown re-render triggered:", dropdownChecklists);
+  }, [dropdownChecklists]);
+  
   const handleOpenDialog = () => {
     setOpenDialog(true);
     setNewItemText("");
@@ -1296,6 +1306,7 @@ const paginatedChecklists = React.useMemo(() => {
           />
 
           <TextField
+            key={dropdownChecklists.length}
             select
             label="Select Checklist"
             value={selectedChecklistForItem || ''}  // Ensure it defaults to an empty string if undefined
@@ -1318,21 +1329,19 @@ const paginatedChecklists = React.useMemo(() => {
               },
             }}
           >
-               {checklists.map((checklist) => (
-            <MenuItem key={checklist.id} value={checklist.id}>
-              {checklist.title}
-            </MenuItem>
-          ))}
-          {hasMoreChecklists && (
-            <MenuItem onClick={fetchMoreChecklists} value="">
-              <Button
-                variant="text"
-                sx={{ color: "#3494e6", textTransform: "none" }}
-              >
+            {dropdownChecklists.map((checklist) => (
+              <MenuItem key={checklist.id} value={checklist.id}>
+                {checklist.title}
+              </MenuItem>
+            ))}
+            {hasMoreDropdownChecklists && (
+              <MenuItem  onClick={() => {
+                console.log("Show More clicked");
+                fetchMoreDropdownChecklists();
+              }}>
                 Show More
-              </Button>
-            </MenuItem>
-          )}
+              </MenuItem>
+            )}
           </TextField>
 
 
