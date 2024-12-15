@@ -77,7 +77,8 @@ const Checklists = () => {
     // Pagination state and logic
   const [currentPage, setCurrentPage] = useState(1);
   const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
-  const [showMore, setShowMore] = useState(true); // Add this state to control the "Show More" button visibility
+  
+  const [hasMoreChecklists, setHasMoreChecklists] = useState(true);
 
 
   // handle the checkbox button
@@ -511,33 +512,29 @@ const paginatedChecklists = React.useMemo(() => {
   };
 
  // Handle drop menu show more in create checklist items
- const handleShowMore = async () => {
+ const fetchMoreChecklists = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("No token found. Please log in.");
+    return;
+  }
+
   try {
-    const nextPage = currentPage + 1; // Increment the page number
-    const response = await axios.get(`http://127.0.0.1:8000/api/checklists?page=${nextPage}&titles_only=true`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    const response = await axios.get(
+      `http://127.0.0.1:8000/api/checklists?page=${currentPage + 1}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     if (response.data.results.length > 0) {
-      setChecklists((prev) => {
-        // Avoid duplicating the items by combining only unique checklists
-        const newChecklists = response.data.results.filter(item => !prev.some(existingItem => existingItem.id === item.id));
-        return [...prev, ...newChecklists];
-        console.log("newChecklists ::",newChecklists)
-      });
-
-      setCurrentPage(nextPage); // Update page number
-      setShowMore(response.data.next !== null); // Update showMore state
-      console.log("ShowMore :: ",showMore)
-      toast.success("More checklists loaded!", { position: "bottom-center" });
+      setChecklists((prevChecklists) => [...prevChecklists, ...response.data.results]);
+      setCurrentPage((prevPage) => prevPage + 1);
     } else {
-      setShowMore(false); // No more items to load
-      toast.info("No more checklists to load.", { position: "bottom-center" });
+      setHasMoreChecklists(false); // No more checklists
     }
   } catch (error) {
-    toast.error("Unable to load more checklists.", { position: "bottom-center" });
+    console.error("Error fetching more checklists:", error);
   }
 };
 
@@ -1321,15 +1318,21 @@ const paginatedChecklists = React.useMemo(() => {
               },
             }}
           >
-            {Array.isArray(checklists) && checklists.length > 0 ? (
-              checklists.map((checklist) => (
-                <MenuItem key={checklist.id} value={checklist.id}>
-                  {checklist.title}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>No Checklists Available</MenuItem>
-            )}
+               {checklists.map((checklist) => (
+            <MenuItem key={checklist.id} value={checklist.id}>
+              {checklist.title}
+            </MenuItem>
+          ))}
+          {hasMoreChecklists && (
+            <MenuItem onClick={fetchMoreChecklists} value="">
+              <Button
+                variant="text"
+                sx={{ color: "#3494e6", textTransform: "none" }}
+              >
+                Show More
+              </Button>
+            </MenuItem>
+          )}
           </TextField>
 
 
