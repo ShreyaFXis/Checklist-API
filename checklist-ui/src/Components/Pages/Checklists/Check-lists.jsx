@@ -83,8 +83,7 @@ const Checklists = () => {
   const [dropdownChecklists, setDropdownChecklists] = useState([]);
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
-
-
+  const [isLoading, setIsLoading] = useState(false);
 
   // handle the checkbox button
   const toggleEditMode = () => {
@@ -438,6 +437,13 @@ const paginatedChecklists = React.useMemo(() => {
     setSelectedChecklistForItem(checklistId);
     console.log("setSelectedChecklistForItem:: ",selectedChecklistForItem)
     setOpenItemModal(true);
+
+    // Reset page and fetch the first page of checklists if not already fetched
+    if (currentDropdownPage !== 1 || dropdownChecklists.length === 0) {
+      setDropdownChecklists([]); // Clear existing checklists
+      setCurrentDropdownPage(1); // Reset to first page
+      fetchMoreDropdownChecklists(1); // Fetch first page
+    }
   };
 
   const handleCloseItemModal = () => {
@@ -516,14 +522,14 @@ const paginatedChecklists = React.useMemo(() => {
     }
   };
 
-  // Function to fetch more checklists for the dropdown menu
+  // handle fetch more checklists for the dropdown menu
   const fetchMoreDropdownChecklists = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("No token found. Please log in.");
       return;
     }
-
+    setIsLoading(true); // Start loading state
     try {
       const response = await axios.get(
         `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}&titles_only=true`,
@@ -532,18 +538,18 @@ const paginatedChecklists = React.useMemo(() => {
         }
       );
 
+      // Merge the results to the dropdown checklists
       if (response.data.results.length > 0) {
-        setDropdownChecklists((prevDropdownChecklists) => {
-          const newChecklists = [...prevDropdownChecklists, ...response.data.results];
-          return newChecklists;
-        });
-        setCurrentDropdownPage((prevPage) => prevPage + 1);
+        setDropdownChecklists((prev) => [...prev, ...response.data.results]);
+        setCurrentDropdownPage(page + 1); // Increment to the next page
       } else {
         setHasMoreDropdownChecklists(false); // No more checklists to load
       }
     } catch (error) {
       console.error("Error fetching more dropdown checklists:", error);
-    }
+    } finally {
+      setIsLoading(false); // Stop loading state
+  }
   };
 
   useEffect(() => {
@@ -1266,7 +1272,7 @@ const paginatedChecklists = React.useMemo(() => {
           </DialogActions>
         </div>
       </Dialog>
-
+       
       {/* Checklist item creation modal */}
       <Dialog
         open={openItemModal}
@@ -1334,12 +1340,16 @@ const paginatedChecklists = React.useMemo(() => {
                 {checklist.title}
               </MenuItem>
             ))}
+
             {hasMoreDropdownChecklists && (
-              <MenuItem  onClick={() => {
-                console.log("Show More clicked");
-                fetchMoreDropdownChecklists();
-              }}>
-                Show More
+              <MenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  fetchMoreDropdownChecklists(); // Load the next page
+                }}
+              >
+                {isLoading ? "Loading..." : "Show More..."}
               </MenuItem>
             )}
           </TextField>
