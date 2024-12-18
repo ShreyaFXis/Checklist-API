@@ -83,7 +83,7 @@ const Checklists = () => {
   const [dropdownChecklists, setDropdownChecklists] = useState([]);
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+ 
 
   // handle the checkbox button
   const toggleEditMode = () => {
@@ -435,20 +435,23 @@ const paginatedChecklists = React.useMemo(() => {
   // Handle open item modal for checklist items
   const handleOpenItemModal = (checklistId) => {
     setSelectedChecklistForItem(checklistId);
-    console.log("setSelectedChecklistForItem:: ",selectedChecklistForItem)
+    // console.log("setSelectedChecklistForItem:: ",selectedChecklistForItem)
+   // console.log("object", dropdownChecklists);
     setOpenItemModal(true);
 
     // Reset page and fetch the first page of checklists if not already fetched
     if (currentDropdownPage !== 1 || dropdownChecklists.length === 0) {
-      setDropdownChecklists([]); // Clear existing checklists
-      setCurrentDropdownPage(1); // Reset to first page
+      // setDropdownChecklists([]); // Clear existing checklists
+     // setCurrentDropdownPage(1); // Reset to first page
       fetchMoreDropdownChecklists(1); // Fetch first page
     }
   };
 
   const handleCloseItemModal = () => {
     setOpenItemModal(false);
+    setDropdownChecklists([]);
     setNewChecklistItemText("");
+    setCurrentDropdownPage(1);
   };
 
   // Handle create checklist items
@@ -489,19 +492,8 @@ const paginatedChecklists = React.useMemo(() => {
         }
       );
 
-      console.log("selectedChecklistForItem::",selectedChecklistForItem)
-      console.log("response.data::",response.data)
-      // Update checklistItems directly at the end for the selected checklist
-      // setChecklistItems((prevItems) => ({
-      //   ...prevItems,
-      //   [selectedChecklistForItem]: [
-      //     ...(prevItems[selectedChecklistForItem] || []),
-      //     response.data,
-      //   ],
-      // }));
-
-       // Refetch the updated checklist items
-       await fetchChecklistItems(selectedChecklistForItem, 1); // Refetch the first page of items
+      // Refetch the updated checklist items
+      await fetchChecklistItems(selectedChecklistForItem, 1); // Refetch the first page of items
 
 
       handleCloseItemModal();
@@ -529,7 +521,7 @@ const paginatedChecklists = React.useMemo(() => {
       alert("No token found. Please log in.");
       return;
     }
-    setIsLoading(true); // Start loading state
+    //console.log("currentDropdownPage", currentDropdownPage);
     try {
       const response = await axios.get(
         `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}&titles_only=true`,
@@ -538,19 +530,22 @@ const paginatedChecklists = React.useMemo(() => {
         }
       );
 
-      // Merge the results to the dropdown checklists
       if (response.data.results.length > 0) {
-        setDropdownChecklists((prev) => [...prev, ...response.data.results]);
-        setCurrentDropdownPage(page + 1); // Increment to the next page
+        setDropdownChecklists((prevDropdownChecklists) => {
+          const newChecklists = [...prevDropdownChecklists, ...response.data.results];
+          //console.log("prevDropdownChecklists::",prevDropdownChecklists)
+          return newChecklists;
+        });
+        setCurrentDropdownPage((prevPage) => prevPage + 1);
       } else {
         setHasMoreDropdownChecklists(false); // No more checklists to load
       }
     } catch (error) {
-      console.error("Error fetching more dropdown checklists:", error);
-    } finally {
-      setIsLoading(false); // Stop loading state
-  }
+      toast.error("Error fetching more dropdown checklists:", error);
+    }
   };
+
+  //console.log(dropdownChecklists)
 
   useEffect(() => {
     console.log("Dropdown re-render triggered:", dropdownChecklists);
@@ -1339,18 +1334,15 @@ const paginatedChecklists = React.useMemo(() => {
               <MenuItem key={checklist.id} value={checklist.id}>
                 {checklist.title}
               </MenuItem>
-            ))}
 
+            ))}
             {hasMoreDropdownChecklists && (
-              <MenuItem
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fetchMoreDropdownChecklists(); // Load the next page
-                }}
-              >
-                {isLoading ? "Loading..." : "Show More..."}
-              </MenuItem>
+              <MenuItem  onClick={() => {
+                console.log("Show More clicked");
+                fetchMoreDropdownChecklists();
+              }}>
+                Show More
+                </MenuItem>
             )}
           </TextField>
 
