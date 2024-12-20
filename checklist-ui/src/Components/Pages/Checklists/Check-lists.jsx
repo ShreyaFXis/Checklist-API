@@ -83,21 +83,16 @@ const Checklists = () => {
   const [dropdownChecklists, setDropdownChecklists] = useState([]);
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
- 
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
 
   // handle the checkbox button
   const toggleEditMode = () => {
     setIsEditMode((prevIsEditMode) => {
-      if (!prevIsEditMode) {
-        setSelectedChecklists(allChecklistIds); // Select all
-      } else {
-        setSelectedChecklists([]); // Unselect all
-      }
-      //console.log("IsEditMode :: ", isEditMode)
+      setSelectedChecklists(prevIsEditMode ? [] : allChecklistIds);
       return !prevIsEditMode;
-      
     });
   };
+  
 
   const handleCancel = () => {
     setIsEditMode(false);
@@ -452,6 +447,8 @@ const paginatedChecklists = React.useMemo(() => {
     setDropdownChecklists([]);
     setNewChecklistItemText("");
     setCurrentDropdownPage(1);
+    setHasMoreDropdownChecklists(true);
+    console.log("setHasMoreDropdownChecklists  on close:: ",hasMoreDropdownChecklists)
   };
 
   // Handle create checklist items
@@ -521,7 +518,7 @@ const paginatedChecklists = React.useMemo(() => {
       alert("No token found. Please log in.");
       return;
     }
-    //console.log("currentDropdownPage", currentDropdownPage);
+  
     try {
       const response = await axios.get(
         `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}&titles_only=true`,
@@ -529,23 +526,36 @@ const paginatedChecklists = React.useMemo(() => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      if (response.data.results.length > 0) {
-        setDropdownChecklists((prevDropdownChecklists) => {
-          const newChecklists = [...prevDropdownChecklists, ...response.data.results];
-          //console.log("prevDropdownChecklists::",prevDropdownChecklists)
-          return newChecklists;
-        });
+  
+      const newResults = response.data.results;
+  
+      if (newResults.length > 0) {
+        setDropdownChecklists((prevDropdownChecklists) => [
+          ...prevDropdownChecklists,
+          ...newResults,
+        ]);
         setCurrentDropdownPage((prevPage) => prevPage + 1);
+  
+        // Adjust based on API structure
+        if (response.data.next) {
+          setHasMoreDropdownChecklists(true);
+        } else {
+          setHasMoreDropdownChecklists(false);
+        }
       } else {
-        setHasMoreDropdownChecklists(false); // No more checklists to load
+        setHasMoreDropdownChecklists(false); // No more data
       }
     } catch (error) {
-      toast.error("Error fetching more dropdown checklists:", error);
+      console.error("Error fetching more dropdown checklists:", error);
+      toast.error("Error fetching checklists.");
     }
   };
+  
+  useEffect(() => {
+    console.log("Dropdown Checklists:", dropdownChecklists);
+    console.log("Has More Dropdown Checklists:", hasMoreDropdownChecklists);
+  }, [dropdownChecklists, hasMoreDropdownChecklists]);
 
-  //console.log(dropdownChecklists)
 
   useEffect(() => {
     console.log("Dropdown re-render triggered:", dropdownChecklists);
@@ -795,13 +805,13 @@ const paginatedChecklists = React.useMemo(() => {
           style={{ display: "flex" ,alignContent: "strech", alignItems:"center" }}
         >
 
-      <Checkbox size="small"
-        style={{ cursor: "pointer" }}
-        checked={isEditMode}
-        onChange={toggleEditMode}
-        icon={<CheckBoxOutlineBlankOutlinedIcon  />}
-        checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
-      />
+        <Checkbox size="small"
+          style={{ cursor: "pointer" }}
+          checked={isEditMode}
+          onChange={toggleEditMode}
+          icon={<CheckBoxOutlineBlankOutlinedIcon  />}
+          checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
+        />
 
             {isEditMode && (
             <div
@@ -1320,11 +1330,21 @@ const paginatedChecklists = React.useMemo(() => {
             error={!!checklistSelectError}  // Display error if checklist is not selected
             helperText={checklistSelectError}  // Error message when no checklist is selected
             SelectProps={{
+              open: dropdownOpen, // Control dropdown open state
+              onOpen: () => setDropdownOpen(true),
+              onClose: () => setDropdownOpen(false), // Close the dropdown programmatically          
               MenuProps: {
                 PaperProps: {
                   style: {
                     maxHeight: '300px',  // Set dropdown height
                     overflowY: 'auto',  // Enable scrolling
+                  },
+                  onClick: (event) => {
+                    console.log('Show More clicked');
+                    event.preventDefault();
+                    event.stopPropagation(); // Prevent unintended close
+                    // Add a small delay to ensure the dropdown stays open                    
+                    setDropdownOpen(true);                    
                   },
                 },
               },
@@ -1334,18 +1354,20 @@ const paginatedChecklists = React.useMemo(() => {
               <MenuItem key={checklist.id} value={checklist.id}>
                 {checklist.title}
               </MenuItem>
-
             ))}
             {hasMoreDropdownChecklists && (
-              <MenuItem  onClick={() => {
-                console.log("Show More clicked");
-                fetchMoreDropdownChecklists();
-              }}>
-                Show More
+              <MenuItem
+               onClick={(event) => {
+                event.stopPropagation(); // Prevent menu closure
+                {/*setDropdownOpen(true);*/} // Keep the dropdown open explicitly
+                event.preventDefault(); // Prevent default menu close behavior
+                fetchMoreDropdownChecklists(); // Fetch additional items
+              }} 
+              >
+                Show More...
                 </MenuItem>
             )}
           </TextField>
-
 
         </DialogContent>
 

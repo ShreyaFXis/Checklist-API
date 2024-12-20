@@ -64,8 +64,6 @@ EMAIL_HOST_PASSWORD = 'xpcr bint ojek ctov'  # Gmail App Password, not your regu
 FRONTEND_URL = 'http://localhost:3000'  # Update to your frontend's actual URL
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # The email address to send from
 
-
-
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 MIDDLEWARE = [
