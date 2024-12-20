@@ -89,6 +89,7 @@ const Checklists = () => {
   const toggleEditMode = () => {
     setIsEditMode((prevIsEditMode) => {
       setSelectedChecklists(prevIsEditMode ? [] : allChecklistIds);
+      console.log("IsEditMode :: ", isEditMode)
       return !prevIsEditMode;
     });
   };
@@ -796,6 +797,131 @@ const paginatedChecklists = React.useMemo(() => {
     },
   ];
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   
   return (
     <ThemeProvider theme={theme}>
@@ -914,12 +1040,14 @@ const paginatedChecklists = React.useMemo(() => {
             filteredChecklists.map((checklist) => (
               <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
                 {/* Checkbox placed outside the Accordion */}
-                { (
+                {(
                   <Checkbox 
                     size="small" 
                     sx={{ marginRight: 1, flexDirection: "row"}}
                     checked={selectedChecklists.includes(checklist.id)}
-                    onChange={() => handleChecklistSelection(checklist.id)} 
+                    onChange={() => {
+                      handleChecklistSelection(checklist.id);
+                  }} 
                   />
                 )}
                 <Accordion
