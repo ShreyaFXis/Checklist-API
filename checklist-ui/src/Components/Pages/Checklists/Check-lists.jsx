@@ -88,8 +88,7 @@ const Checklists = () => {
   // handle the checkbox button
   const toggleEditMode = () => {
     setIsEditMode((prevIsEditMode) => {
-      setSelectedChecklists(prevIsEditMode ? [] : allChecklistIds);
-      console.log("IsEditMode :: ", isEditMode)
+      setSelectedChecklists(prevIsEditMode ? [] : allChecklistIds); // Select all or clear all
       return !prevIsEditMode;
     });
   };
@@ -102,11 +101,16 @@ const Checklists = () => {
 
   // handle checkbox selection for checklists
   const handleChecklistSelection = (checklistId) => {
-    setSelectedChecklists((prevSelected) =>
-      prevSelected.includes(checklistId)
+    setSelectedChecklists((prevSelected) => {
+      const updatedSelection = prevSelected.includes(checklistId)
         ? prevSelected.filter((id) => id !== checklistId)
-        : [...prevSelected, checklistId]
-    );
+        : [...prevSelected, checklistId];
+  
+      // Set edit mode based on selection
+      setIsEditMode(updatedSelection.length > 0);
+  
+      return updatedSelection;
+    });
   };
 
   const handleDeleteSelected = async () => {
@@ -797,138 +801,12 @@ const paginatedChecklists = React.useMemo(() => {
     },
   ];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ bgcolor: "background.default", p: 2 }}>
         <div
           className="wrapper-class"
-          style={{ display: "flex" ,alignContent: "strech", alignItems:"center" }}
+          style={{ display: "flex" ,alignContent: "stretch", alignItems:"center" }}
         >
 
         <Checkbox size="small"
@@ -978,8 +856,8 @@ const paginatedChecklists = React.useMemo(() => {
               )}
             </IconButton>
   
-        </div>
-      )}
+            </div>
+             )}
 
           <div  style={{
             display: "flex",
