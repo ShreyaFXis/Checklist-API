@@ -1322,58 +1322,63 @@ const paginatedChecklists = React.useMemo(() => {
             helperText={itemTextError}
           />
 
-          <TextField
-            key={dropdownChecklists.length}
-            select
-            label="Select Checklist"
-            value={selectedChecklistForItem || ''}  // Ensure it defaults to an empty string if undefined
-            onChange={(e) => {
-              setSelectedChecklistForItem(e.target.value);  // Update the selected checklist
-              setChecklistSelectError(false);  // Clear the error when the user selects a checklist
-            }}
-            fullWidth
-            sx={{ mt: 2 }}
-            error={!!checklistSelectError}  // Display error if checklist is not selected
-            helperText={checklistSelectError}  // Error message when no checklist is selected
-            SelectProps={{
-              open: dropdownOpen, // Control dropdown open state
-              onOpen: () => setDropdownOpen(true),
-              onClose: () => setDropdownOpen(false), // Close the dropdown programmatically          
-              MenuProps: {
-                PaperProps: {
-                  style: {
-                    maxHeight: '300px',  // Set dropdown height
-                    overflowY: 'auto',  // Enable scrolling
-                  },
-                  onClick: (event) => {
-                    console.log('Show More clicked');
-                    event.preventDefault();
-                    event.stopPropagation(); // Prevent unintended close
-                    // Add a small delay to ensure the dropdown stays open                    
-                    setDropdownOpen(true);                    
-                  },
+        <TextField
+          key={dropdownChecklists.length}
+          select
+          label="Select Checklist"
+          value={selectedChecklistForItem || ''}  // Ensure it defaults to an empty string if undefined
+          onChange={(e) => {
+            setSelectedChecklistForItem(e.target.value); // Update the selected checklist
+            setChecklistSelectError(false); // Clear the error when the user selects a checklist
+            setDropdownOpen(false); // Close the dropdown after selecting a valid option
+          }} 
+          
+          fullWidth
+          sx={{ mt: 2 }}
+          error={!!checklistSelectError}  // Display error if checklist is not selected
+          helperText={checklistSelectError}  // Error message when no checklist is selected
+          SelectProps={{
+            open: dropdownOpen,  // Control dropdown open state
+            onOpen: () => setDropdownOpen(true),
+            onClose: () => { 
+              // Close only when checklist item is selected
+              if (selectedChecklistForItem) {
+                setDropdownOpen(false); 
+              }
+            },
+            MenuProps: {
+              PaperProps: {
+                style: {
+                  maxHeight: '300px', // Set dropdown height
+                  overflowY: 'auto',  // Enable scrolling
                 },
               },
-            }}
-          >
-            {dropdownChecklists.map((checklist) => (
-              <MenuItem key={checklist.id} value={checklist.id}>
-                {checklist.title}
-              </MenuItem>
-            ))}
-            {hasMoreDropdownChecklists && (
-              <MenuItem
-               onClick={(event) => {
-                event.stopPropagation(); // Prevent menu closure
-                {/*setDropdownOpen(true);*/} // Keep the dropdown open explicitly
-                event.preventDefault(); // Prevent default menu close behavior
-                fetchMoreDropdownChecklists(); // Fetch additional items
-              }} 
-              >
-                Show More...
-                </MenuItem>
-            )}
-          </TextField>
+            },
+          }}
+        >
+          {dropdownChecklists.map((checklist) => (
+            <MenuItem
+              key={checklist.id}
+              value={checklist.id}
+              onClick={() => {
+                setDropdownOpen(false); // Close the dropdown after selecting a checklist
+              }}
+            >
+              {checklist.title}
+            </MenuItem>
+          ))}
+          {hasMoreDropdownChecklists && (
+            <MenuItem
+              onClick={(event) => {
+                event.stopPropagation();  // Prevent menu from closing
+                fetchMoreDropdownChecklists();  // Fetch additional items
+                setDropdownOpen(true);  // Ensure the dropdown remains open
+              }}
+            >
+              Show More...
+            </MenuItem>
+          )}
+        </TextField>
 
         </DialogContent>
 
@@ -1474,8 +1479,7 @@ const paginatedChecklists = React.useMemo(() => {
       </Dialog>
 
       <ToastContainer />
-      {/* Pagination component */}
-        
+      {/* Pagination component */} 
     </ThemeProvider>
   );
 };
