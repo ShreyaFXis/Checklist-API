@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
-  LinearProgress, Pagination, IconButton, 
+  LinearProgress, Pagination, IconButton, FormHelperText, Select,
 } from "@mui/material";
 import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
 import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
@@ -92,7 +92,6 @@ const Checklists = () => {
       return !prevIsEditMode;
     });
   };
-  
 
   const handleCancel = () => {
     setIsEditMode(false);
@@ -107,8 +106,7 @@ const Checklists = () => {
         : [...prevSelected, checklistId];
   
       // Set edit mode based on selection
-      setIsEditMode(updatedSelection.length > 0);
-  
+      setIsEditMode(updatedSelection.length > 0);  
       return updatedSelection;
     });
   };
@@ -912,6 +910,32 @@ const paginatedChecklists = React.useMemo(() => {
           </div>
         </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <>
         
           {filteredChecklists.length > 0 ? (
@@ -928,12 +952,13 @@ const paginatedChecklists = React.useMemo(() => {
                   }} 
                   />
                 )}
+
                 <Accordion
                 key={checklist.id}
                 onChange={handleAccordionChange(checklist.id)}
                 expanded={expandedAccordions.includes(checklist.id)}
                 sx={{ margin: "1px 0", width: "100%" }}
-              >
+                >
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   sx={{
@@ -1321,64 +1346,56 @@ const paginatedChecklists = React.useMemo(() => {
             error={!!itemTextError}
             helperText={itemTextError}
           />
+    {/* --------------------------------------------------*/}
 
-        <TextField
-          key={dropdownChecklists.length}
-          select
-          label="Select Checklist"
-          value={selectedChecklistForItem || ''}  // Ensure it defaults to an empty string if undefined
-          onChange={(e) => {
-            setSelectedChecklistForItem(e.target.value); // Update the selected checklist
-            setChecklistSelectError(false); // Clear the error when the user selects a checklist
-            setDropdownOpen(false); // Close the dropdown after selecting a valid option
-          }} 
-          
-          fullWidth
-          sx={{ mt: 2 }}
-          error={!!checklistSelectError}  // Display error if checklist is not selected
-          helperText={checklistSelectError}  // Error message when no checklist is selected
-          SelectProps={{
-            open: dropdownOpen,  // Control dropdown open state
-            onOpen: () => setDropdownOpen(true),
-            onClose: () => { 
-              // Close only when checklist item is selected
-              if (selectedChecklistForItem) {
-                setDropdownOpen(false); 
-              }
-            },
-            MenuProps: {
+          <Select
+            value={selectedChecklistForItem || ''} // Default to an empty string if undefined
+            label="Select Checklist"
+            onChange={(e) => {
+              setSelectedChecklistForItem(e.target.value); // Update the selected checklist
+              setChecklistSelectError(false); // Clear the error when the user selects a checklist
+              setDropdownOpen(false); // Close the dropdown after selecting a valid option
+            }} 
+            fullWidth
+            displayEmpty
+            sx={{ mt: 2 }}
+            error={!!checklistSelectError} // Display error if checklist is not selected
+            MenuProps={{
               PaperProps: {
                 style: {
                   maxHeight: '300px', // Set dropdown height
-                  overflowY: 'auto',  // Enable scrolling
+                  overflowY: 'auto', // Enable scrolling
                 },
               },
-            },
-          }}
-        >
-          {dropdownChecklists.map((checklist) => (
-            <MenuItem
-              key={checklist.id}
-              value={checklist.id}
-              onClick={() => {
-                setDropdownOpen(false); // Close the dropdown after selecting a checklist
-              }}
-            >
-              {checklist.title}
-            </MenuItem>
-          ))}
-          {hasMoreDropdownChecklists && (
-            <MenuItem
-              onClick={(event) => {
-                event.stopPropagation();  // Prevent menu from closing
-                fetchMoreDropdownChecklists();  // Fetch additional items
-                setDropdownOpen(true);  // Ensure the dropdown remains open
-              }}
-            >
-              Show More...
-            </MenuItem>
-          )}
-        </TextField>
+            }}
+          >
+            {dropdownChecklists.map((checklist) => (
+              <MenuItem
+                key={checklist.id}
+                value={checklist.id}
+                onClick={() => {
+                  setSelectedChecklistForItem(checklist.id);
+                  setDropdownOpen(false); // Close dropdown after selecting a valid checklist
+                }} >
+                {checklist.title}
+              </MenuItem>
+            ))}
+            {hasMoreDropdownChecklists && (
+              <MenuItem
+                onClick={(event) => {
+                  event.stopPropagation(); // Prevent menu from closing
+                  fetchMoreDropdownChecklists(); // Fetch additional items
+                  setDropdownOpen(true); // Ensure the dropdown remains open
+                }}
+              >
+                Show More...
+              </MenuItem>
+            )}
+          </Select>
+          <FormHelperText error={!!checklistSelectError}>
+            {checklistSelectError} {/* Display helper text for errors */}
+          </FormHelperText>
+
 
         </DialogContent>
 
