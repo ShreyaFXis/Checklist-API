@@ -73,7 +73,8 @@ const Checklists = () => {
 
   //Multiple delete
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedChecklists, setSelectedChecklists] = React.useState([]);
+  const [selectedChecklists, setSelectedChecklists] = useState({});
+  const [isPageSelectAll, setIsPageSelectAll] = useState(false);
     // Pagination state and logic
   const [currentPage, setCurrentPage] = useState(1);
   const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
@@ -85,34 +86,67 @@ const Checklists = () => {
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
 
+  const totalSelectedCount = Object.values(selectedChecklists).reduce((count, pageSelections) => count + pageSelections.length, 0);
+
   // handle the checkbox button
   const toggleEditMode = () => {
     setIsEditMode((prevIsEditMode) => {
-      setSelectedChecklists(prevIsEditMode ? [] : allChecklistIds); // Select all or clear all
+      console.log("isEditMode :: ",isEditMode)
+      setSelectedChecklists((prevSelected) => {
+        if (!prevIsEditMode) {
+          // Select all items on the current page
+          return { ...prevSelected, [page]: paginatedChecklists.map((item) => item.id) };
+        } else {
+          // Clear all selections
+          return {};
+        }
+      });
+      console.log("selectedChecklists ::",selectedChecklists)
       return !prevIsEditMode;
+    });
+  };
+
+  const togglePageSelectAll = () => {
+    setIsPageSelectAll((prevState) => {
+      const pageItems = paginatedChecklists.map((checklist) => checklist.id);
+  
+      setSelectedChecklists((prevSelected) => ({
+        ...prevSelected,
+        [page]: prevState ? [] : pageItems,
+      }));
+  
+      return !prevState;
     });
   };
 
   const handleCancel = () => {
     setIsEditMode(false);
-    setSelectedChecklists([]);
+    setSelectedChecklists({});
   };
 
   // handle checkbox selection for checklists
   const handleChecklistSelection = (checklistId) => {
     setSelectedChecklists((prevSelected) => {
-      const updatedSelection = prevSelected.includes(checklistId)
-        ? prevSelected.filter((id) => id !== checklistId)
-        : [...prevSelected, checklistId];
-  
-      // Set edit mode based on selection
-      setIsEditMode(updatedSelection.length > 0);  
-      return updatedSelection;
+      const currentPageSelections = prevSelected[page] || [];
+      const updatedPageSelections = currentPageSelections.includes(checklistId)
+        ? currentPageSelections.filter((id) => id !== checklistId)
+        : [...currentPageSelections, checklistId];
+  console.log("currentPageSelections :: ",currentPageSelections);
+  console.log("updatedPageSelections :: ",updatedPageSelections);
+
+      return {
+        ...prevSelected,
+        [page]: updatedPageSelections,
+        
+      };
     });
+    console.log("page::",page);
   };
 
+
   const handleDeleteSelected = async () => {
-    if (selectedChecklists.length === 0) {
+    const selectedForCurrentPage = selectedChecklists[page] || [];
+    if (selectedForCurrentPage.length === 0) {
       alert("No checklists selected for deletion.");
       return;
     }
@@ -123,62 +157,39 @@ const Checklists = () => {
         toast.error("No token found. Please log in.");
         return;
       }
-      //console.log("token :: ", token);
   
-      
       const response = await axios.delete(`http://127.0.0.1:8000/api/checklists`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { checklist_ids: selectedChecklists }, 
+        data: { checklist_ids: selectedForCurrentPage },
       });
-
+  
       if (response.status === 200) {
-        setFilteredChecklists((prevFilteredChecklists) => {
-          // Filter out the deleted checklists
-          const updatedChecklists = prevFilteredChecklists.filter(
-            (checklist) => !selectedChecklists.includes(checklist.id)
-          );
-          //console.log("updatedChecklists::", updatedChecklists);
-      
-          // Calculate total items and total pages
-          const totalRemainingItems = updatedChecklists.length;
-          const totalPages = Math.ceil(totalRemainingItems / itemsPerPage);
-          // console.log("totalRemainingItems::", totalRemainingItems);
-          // console.log("totalPages::", totalPages);
-      
-          // Get items for the current page after deletion
-          const startIndex = (page - 1) * itemsPerPage;
-          //console.log("startIndex::", startIndex);
-      
-          // Check if the current page is empty after deletion
-          if (totalRemainingItems === 0) {
-            // If all items are deleted, go to the previous page, but not below page 1
-            setPage((prevPage) => Math.max(prevPage - 1, 1));
-          }
-      
-          return updatedChecklists; // Update the filteredChecklists
-        });
-      
-        // Clear the selected checklists
-        setSelectedChecklists([]);
-        //setIsEditMode(true); // Exit edit mode after deletion
-      
-        // Show success message
+        setFilteredChecklists((prevFilteredChecklists) =>
+          prevFilteredChecklists.filter(
+            (checklist) => !selectedForCurrentPage.includes(checklist.id)
+          )
+        );
+  
+        setSelectedChecklists((prevSelected) => ({
+          ...prevSelected,
+          [page]: [],
+        }));
+  
         toast.success(
-          `${selectedChecklists.length} checklist(s) deleted successfully!`
+          `${selectedForCurrentPage.length} checklist's deleted successfully!`
         );
       }
-      
     } catch (error) {
       console.error("Error deleting checklists:", error);
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
-
-// Paginate checklists
-const paginatedChecklists = React.useMemo(() => {
-  const startIndex = (page - 1) * itemsPerPage;
-  return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
-}, [filteredChecklists, page]);
+  
+  // Paginate checklists
+  const paginatedChecklists = React.useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredChecklists, page]);
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -832,7 +843,7 @@ const paginatedChecklists = React.useMemo(() => {
               onClick={handleDeleteSelected}
             >
               <DeleteIcon />
-              {selectedChecklists.length > 0 && (
+              {totalSelectedCount > 0 && (
                 <Box
                   sx={{
                     position: "absolute",
@@ -849,10 +860,11 @@ const paginatedChecklists = React.useMemo(() => {
                     fontSize: "12px",
                   }}
                 >
-                  {selectedChecklists.length}
+                  {totalSelectedCount}
                 </Box>
               )}
             </IconButton>
+
   
             </div>
              )}
@@ -910,32 +922,6 @@ const paginatedChecklists = React.useMemo(() => {
           </div>
         </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         <>
         
           {filteredChecklists.length > 0 ? (
@@ -946,10 +932,8 @@ const paginatedChecklists = React.useMemo(() => {
                   <Checkbox 
                     size="small" 
                     sx={{ marginRight: 1, flexDirection: "row"}}
-                    checked={selectedChecklists.includes(checklist.id)}
-                    onChange={() => {
-                      handleChecklistSelection(checklist.id);
-                  }} 
+                    checked={(selectedChecklists[page] || []).includes(checklist.id)}
+                    onChange={() => handleChecklistSelection(checklist.id)}
                   />
                 )}
 
