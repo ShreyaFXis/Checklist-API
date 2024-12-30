@@ -72,7 +72,9 @@ const Checklists = () => {
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
 
   //Multiple delete
+  const [selectedChecklistsByPage, setSelectedChecklistsByPage] = React.useState({});
   const [isEditMode, setIsEditMode] = useState(false);
+  
   const [selectedChecklists, setSelectedChecklists] = useState({});
   const [isPageSelectAll, setIsPageSelectAll] = useState(false);
     // Pagination state and logic
@@ -86,67 +88,75 @@ const Checklists = () => {
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
 
-  const totalSelectedCount = Object.values(selectedChecklists).reduce((count, pageSelections) => count + pageSelections.length, 0);
+  const totalSelectedCount = Object.values(selectedChecklists).flat().length;
+ // Handle toggling edit mode
+const toggleEditMode = () => {
+  setIsEditMode((prevIsEditMode) => {
+    if (prevIsEditMode) {
+      setSelectedChecklists({}); // Clear all selections when exiting edit mode
+    }
+    return !prevIsEditMode;
+  });
+};
+  // Handle "Select All" on the current page
+  const handleSelectAllOnPage = () => {
+  const currentPageKey = `page${page}`;
+  const currentPageChecklists = filteredChecklists.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+  const currentIds = currentPageChecklists.map((item) => item.id);
 
-  // handle the checkbox button
-  const toggleEditMode = () => {
-    setIsEditMode((prevIsEditMode) => {
-      console.log("isEditMode :: ",isEditMode)
-      setSelectedChecklists((prevSelected) => {
-        if (!prevIsEditMode) {
-          // Select all items on the current page
-          return { ...prevSelected, [page]: paginatedChecklists.map((item) => item.id) };
-        } else {
-          // Clear all selections
-          return {};
-        }
-      });
-      console.log("selectedChecklists ::",selectedChecklists)
-      return !prevIsEditMode;
-    });
-  };
+  const allSelected =
+    selectedChecklists[currentPageKey]?.length === currentIds.length;
 
-  const togglePageSelectAll = () => {
-    setIsPageSelectAll((prevState) => {
-      const pageItems = paginatedChecklists.map((checklist) => checklist.id);
-  
-      setSelectedChecklists((prevSelected) => ({
-        ...prevSelected,
-        [page]: prevState ? [] : pageItems,
-      }));
-  
-      return !prevState;
-    });
-  };
+  setSelectedChecklists((prevSelected) => {
+    const updatedSelected = { ...prevSelected };
 
-  const handleCancel = () => {
-    setIsEditMode(false);
-    setSelectedChecklists({});
-  };
+    if (allSelected) {
+      // Deselect all on the current page
+      delete updatedSelected[currentPageKey];
+    } else {
+      // Select all on the current page
+      updatedSelected[currentPageKey] = currentIds;
+    }
 
-  // handle checkbox selection for checklists
-  const handleChecklistSelection = (checklistId) => {
+    return updatedSelected;
+  });
+};
+
+  // Handle individual checklist selection
+    const handleChecklistSelection = (checklistId) => {
+    const currentPageKey = `page${page}`;
+
     setSelectedChecklists((prevSelected) => {
-      const currentPageSelections = prevSelected[page] || [];
-      const updatedPageSelections = currentPageSelections.includes(checklistId)
-        ? currentPageSelections.filter((id) => id !== checklistId)
-        : [...currentPageSelections, checklistId];
-  console.log("currentPageSelections :: ",currentPageSelections);
-  console.log("updatedPageSelections :: ",updatedPageSelections);
+      const updatedSelected = { ...prevSelected };
+      const currentSelections = updatedSelected[currentPageKey] || [];
 
-      return {
-        ...prevSelected,
-        [page]: updatedPageSelections,
-        
-      };
+      if (currentSelections.includes(checklistId)) {
+        // Deselect if already selected
+        updatedSelected[currentPageKey] = currentSelections.filter(
+          (id) => id !== checklistId
+        );
+      } else {
+        // Add to selected list
+        updatedSelected[currentPageKey] = [...currentSelections, checklistId];
+      }
+
+      // Remove empty pages to avoid clutter
+      if (updatedSelected[currentPageKey]?.length === 0) {
+        delete updatedSelected[currentPageKey];
+      }
+
+      return updatedSelected;
     });
-    console.log("page::",page);
   };
 
-
+  // Handle deletion of selected checklists
   const handleDeleteSelected = async () => {
-    const selectedForCurrentPage = selectedChecklists[page] || [];
-    if (selectedForCurrentPage.length === 0) {
+    const allSelectedIds = Object.values(selectedChecklists).flat();
+  
+    if (allSelectedIds.length === 0) {
       alert("No checklists selected for deletion.");
       return;
     }
@@ -160,36 +170,29 @@ const Checklists = () => {
   
       const response = await axios.delete(`http://127.0.0.1:8000/api/checklists`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { checklist_ids: selectedForCurrentPage },
+        data: { checklist_ids: allSelectedIds },
       });
   
       if (response.status === 200) {
-        setFilteredChecklists((prevFilteredChecklists) =>
-          prevFilteredChecklists.filter(
-            (checklist) => !selectedForCurrentPage.includes(checklist.id)
-          )
+        setFilteredChecklists((prevFiltered) =>
+          prevFiltered.filter((checklist) => !allSelectedIds.includes(checklist.id))
         );
   
-        setSelectedChecklists((prevSelected) => ({
-          ...prevSelected,
-          [page]: [],
-        }));
-  
-        toast.success(
-          `${selectedForCurrentPage.length} checklist's deleted successfully!`
-        );
+        // Clear selections
+        setSelectedChecklists({});
+        toast.success(`${allSelectedIds.length} checklists deleted successfully!`);
       }
     } catch (error) {
       console.error("Error deleting checklists:", error);
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
-  
   // Paginate checklists
   const paginatedChecklists = React.useMemo(() => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredChecklists, page]);
+  
 
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
@@ -290,7 +293,6 @@ const Checklists = () => {
       setLoading(false);
     }
   };
-
   // UseEffect for fetching checklists
   useEffect(() => {
     fetchChecklists();
@@ -817,57 +819,59 @@ const Checklists = () => {
           className="wrapper-class"
           style={{ display: "flex" ,alignContent: "stretch", alignItems:"center" }}
         >
-
-        <Checkbox size="small"
+        {/* Top checkbox for selecting all on the current page */}
+        <Checkbox
+          size="small"
           style={{ cursor: "pointer" }}
-          checked={isEditMode}
-          onChange={toggleEditMode}
-          icon={<CheckBoxOutlineBlankOutlinedIcon  />}
+          checked={
+            selectedChecklists[`page${page}`]?.length ===
+            filteredChecklists.slice(
+              (page - 1) * itemsPerPage,
+              page * itemsPerPage
+            ).length
+          }
+          indeterminate={
+            selectedChecklists[`page${page}`]?.length > 0 &&
+            selectedChecklists[`page${page}`]?.length <
+              filteredChecklists.slice(
+                (page - 1) * itemsPerPage,
+                page * itemsPerPage
+              ).length
+          }
+          onChange={handleSelectAllOnPage}
+          icon={<CheckBoxOutlineBlankOutlinedIcon />}
           checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
         />
 
-            {isEditMode && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "flex-start",
-                marginRight:"10px",
-                marginLeft:"15px"
-              }}
-            >
+    {/* Delete icon appears only when there are selected items */}
+    {totalSelectedCount > 0 && (
+      <IconButton
+        color="error"
+        sx={{ marginLeft: 2, position: "relative" }}
+        onClick={handleDeleteSelected}
+      >
+        <DeleteIcon />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "-5px",
+            right: "-5px",
+            backgroundColor: "red",
+            color: "white",
+            borderRadius: "50%",
+            width: "20px",
+            height: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "12px",
+          }}
+        >
+          {totalSelectedCount}
+        </Box>
+      </IconButton>
+    )}
 
-            <IconButton
-              color="error"
-              sx={{ position: "relative", padding: "8px" }}
-              onClick={handleDeleteSelected}
-            >
-              <DeleteIcon />
-              {totalSelectedCount > 0 && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    backgroundColor: "red",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                  }}
-                >
-                  {totalSelectedCount}
-                </Box>
-              )}
-            </IconButton>
-
-  
-            </div>
-             )}
 
           <div  style={{
             display: "flex",
@@ -928,14 +932,14 @@ const Checklists = () => {
             filteredChecklists.map((checklist) => (
               <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
                 {/* Checkbox placed outside the Accordion */}
-                {(
-                  <Checkbox 
-                    size="small" 
-                    sx={{ marginRight: 1, flexDirection: "row"}}
-                    checked={(selectedChecklists[page] || []).includes(checklist.id)}
-                    onChange={() => handleChecklistSelection(checklist.id)}
-                  />
-                )}
+                <Checkbox
+            size="small"
+            checked={
+              selectedChecklists[`page${page}`]?.includes(checklist.id) || false
+            }
+            onChange={() => handleChecklistSelection(checklist.id)}
+          />
+                
 
                 <Accordion
                 key={checklist.id}
