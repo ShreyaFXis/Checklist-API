@@ -6,6 +6,9 @@ import {
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
   LinearProgress, Pagination, IconButton, FormHelperText, Select,
 } from "@mui/material";
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+
 import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
 import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -87,7 +90,7 @@ const Checklists = () => {
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
-
+  const [menuOpen, setMenuOpen] = useState(false);
   const totalSelectedCount = Object.values(selectedChecklists).flat().length;
  // Handle toggling edit mode
 const toggleEditMode = () => {
@@ -98,33 +101,35 @@ const toggleEditMode = () => {
     return !prevIsEditMode;
   });
 };
+
   // Handle "Select All" on the current page
   const handleSelectAllOnPage = () => {
-  const currentPageKey = `page${page}`;
-  const currentPageChecklists = filteredChecklists.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
-  const currentIds = currentPageChecklists.map((item) => item.id);
-
-  const allSelected =
-    selectedChecklists[currentPageKey]?.length === currentIds.length;
-
-  setSelectedChecklists((prevSelected) => {
-    const updatedSelected = { ...prevSelected };
-
-    if (allSelected) {
-      // Deselect all on the current page
-      delete updatedSelected[currentPageKey];
-    } else {
-      // Select all on the current page
-      updatedSelected[currentPageKey] = currentIds;
-    }
-
-    return updatedSelected;
-  });
-};
-
+    const currentPageKey = `page${page}`;
+    const currentPageChecklists = filteredChecklists.slice(
+      (page - 1) * itemsPerPage,
+      page * itemsPerPage
+    );
+    const currentIds = currentPageChecklists.map((item) => item.id);
+  
+    const allSelected =
+      selectedChecklists[currentPageKey]?.length === currentIds.length;
+  
+    setSelectedChecklists((prevSelected) => {
+      const updatedSelected = { ...prevSelected };
+  
+      if (allSelected) {
+        delete updatedSelected[currentPageKey];
+      } else {
+        updatedSelected[currentPageKey] = currentIds;
+      }
+  
+      // Remove "all" if it's set
+      delete updatedSelected.all;
+  
+      return updatedSelected;
+    });
+  };
+  
   // Handle individual checklist selection
     const handleChecklistSelection = (checklistId) => {
     const currentPageKey = `page${page}`;
@@ -147,11 +152,10 @@ const toggleEditMode = () => {
       if (updatedSelected[currentPageKey]?.length === 0) {
         delete updatedSelected[currentPageKey];
       }
-
+      console.log("selectedChecklists:: ",selectedChecklists)
       return updatedSelected;
     });
   };
-
   // Handle deletion of selected checklists
   const handleDeleteSelected = async () => {
     const allSelectedIds = Object.values(selectedChecklists).flat();
@@ -193,7 +197,6 @@ const toggleEditMode = () => {
     return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredChecklists, page]);
   
-
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
     setExpandedAccordions((prev) =>
@@ -843,34 +846,34 @@ const toggleEditMode = () => {
           checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
         />
 
-    {/* Delete icon appears only when there are selected items */}
-    {totalSelectedCount > 0 && (
-      <IconButton
-        color="error"
-        sx={{ marginLeft: 2, position: "relative" }}
-        onClick={handleDeleteSelected}
-      >
-        <DeleteIcon />
-        <Box
-          sx={{
-            position: "absolute",
-            top: "-5px",
-            right: "-5px",
-            backgroundColor: "red",
-            color: "white",
-            borderRadius: "50%",
-            width: "20px",
-            height: "20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "12px",
-          }}
-        >
-          {totalSelectedCount}
-        </Box>
-      </IconButton>
-    )}
+        {/* Delete icon appears only when there are selected items */}
+        {totalSelectedCount > 0 && (
+          <IconButton
+            color="error"
+            sx={{ marginLeft: 2, position: "relative" }}
+            onClick={handleDeleteSelected}
+          >
+            <DeleteIcon />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "-5px",
+                right: "-5px",
+                backgroundColor: "red",
+                color: "white",
+                borderRadius: "50%",
+                width: "20px",
+                height: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+              }}
+            >
+              {totalSelectedCount}
+            </Box>
+          </IconButton>
+        )}
 
 
           <div  style={{
@@ -1334,56 +1337,55 @@ const toggleEditMode = () => {
             error={!!itemTextError}
             helperText={itemTextError}
           />
-    {/* --------------------------------------------------*/}
+   
+        {/* --------------------------------------------------*/}
 
-          <Select
-            value={selectedChecklistForItem || ''} // Default to an empty string if undefined
-            label="Select Checklist"
-            onChange={(e) => {
-              setSelectedChecklistForItem(e.target.value); // Update the selected checklist
-              setChecklistSelectError(false); // Clear the error when the user selects a checklist
-              setDropdownOpen(false); // Close the dropdown after selecting a valid option
-            }} 
-            fullWidth
-            displayEmpty
-            sx={{ mt: 2 }}
-            error={!!checklistSelectError} // Display error if checklist is not selected
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: '300px', // Set dropdown height
-                  overflowY: 'auto', // Enable scrolling
-                },
-              },
+        <FormControl fullWidth error={!!checklistSelectError} sx={{ mt: 2 }}>
+      <InputLabel id="checklist-label"  sx={{ backgroundColor: 'white', padding: '0 1mm' }}> Select Checklist </InputLabel>
+      <Select
+        labelId="checklist-label"
+        value={selectedChecklistForItem || ''}
+        onChange={(e) => {
+          setSelectedChecklistForItem(e.target.value);
+          setChecklistSelectError(false);
+        }}
+        displayEmpty
+        open={menuOpen}
+        onOpen={() => setMenuOpen(true)}
+        onClose={(event) => {
+          // Prevent menu closing if the click originates from the "Show More" item
+          if (!event.nativeEvent.stopImmediatePropagationFlag) {
+            setMenuOpen(false);
+          }
+        }}
+        MenuProps={{
+          PaperProps: {
+            style: {
+              maxHeight: '300px',
+              overflowY: 'auto',
+            },
+          },
+        }}
+      >
+        {dropdownChecklists.map((checklist) => (
+          <MenuItem key={checklist.id} value={checklist.id}>
+            {checklist.title}
+          </MenuItem>
+        ))}
+        {hasMoreDropdownChecklists && (
+          <MenuItem
+            onClick={(event) => {
+              event.stopPropagation(); // Prevent default closing behavior
+              event.nativeEvent.stopImmediatePropagationFlag = true; // Prevent menu from closing
+              fetchMoreDropdownChecklists();
             }}
           >
-            {dropdownChecklists.map((checklist) => (
-              <MenuItem
-                key={checklist.id}
-                value={checklist.id}
-                onClick={() => {
-                  setSelectedChecklistForItem(checklist.id);
-                  setDropdownOpen(false); // Close dropdown after selecting a valid checklist
-                }} >
-                {checklist.title}
-              </MenuItem>
-            ))}
-            {hasMoreDropdownChecklists && (
-              <MenuItem
-                onClick={(event) => {
-                  event.stopPropagation(); // Prevent menu from closing
-                  fetchMoreDropdownChecklists(); // Fetch additional items
-                  setDropdownOpen(true); // Ensure the dropdown remains open
-                }}
-              >
-                Show More...
-              </MenuItem>
-            )}
-          </Select>
-          <FormHelperText error={!!checklistSelectError}>
-            {checklistSelectError} {/* Display helper text for errors */}
-          </FormHelperText>
-
+            Show More...
+          </MenuItem>
+        )}
+      </Select>
+      {checklistSelectError && <FormHelperText>{checklistSelectError}</FormHelperText>}
+    </FormControl>
 
         </DialogContent>
 
