@@ -11,6 +11,7 @@ import InputLabel from '@mui/material/InputLabel';
 
 import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
 import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
+
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast, ToastContainer } from "react-toastify";
@@ -91,6 +92,7 @@ const Checklists = () => {
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
   const [menuOpen, setMenuOpen] = useState(false);
+
   const totalSelectedCount = Object.values(selectedChecklists).flat().length;
  // Handle toggling edit mode
 const toggleEditMode = () => {
@@ -104,40 +106,42 @@ const toggleEditMode = () => {
 
   // Handle "Select All" on the current page
   const handleSelectAllOnPage = () => {
-    const currentPageKey = `page${page}`;
-    const currentPageChecklists = filteredChecklists.slice(
-      (page - 1) * itemsPerPage,
-      page * itemsPerPage
-    );
-    const currentIds = currentPageChecklists.map((item) => item.id);
-  
-    const allSelected =
-      selectedChecklists[currentPageKey]?.length === currentIds.length;
-  
-    setSelectedChecklists((prevSelected) => {
-      const updatedSelected = { ...prevSelected };
-  
-      if (allSelected) {
-        delete updatedSelected[currentPageKey];
-      } else {
-        updatedSelected[currentPageKey] = currentIds;
-      }
-  
-      // Remove "all" if it's set
-      delete updatedSelected.all;
-  
-      return updatedSelected;
-    });
-  };
-  
-  // Handle individual checklist selection
-    const handleChecklistSelection = (checklistId) => {
-    const currentPageKey = `page${page}`;
+  const currentPageKey = `page${page}`;
+  const currentPageChecklists = filteredChecklists.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+  //console.log("filteredChecklists :: ",filteredChecklists)
+  //console.log("currentPageKey :: ",currentPageKey)
+  //console.log("currentPageChecklists :: ",currentPageChecklists)
+  const currentIds = filteredChecklists.map((item) => item.id);
+  // console.log("currentIds:: ",currentIds)
+  const allSelected =
+    selectedChecklists[currentPageKey]?.length === currentIds.length;
+  // console.log("allSelected:: ",allSelected)
+  setSelectedChecklists((prevSelected) => {
+    const updatedSelected = { ...prevSelected };
 
+    if (allSelected) {
+      // If all are selected, deselect all on the current page
+      delete updatedSelected[currentPageKey];
+    } else {
+      // Otherwise, select all on the current page
+      updatedSelected[currentPageKey] = currentIds;
+    }
+  // console.log("selectedChecklists:: ",selectedChecklists)
+    return updatedSelected;
+  });
+};
+// console.log("selectedChecklists++++++ ",selectedChecklists)
+  // Handle individual checklist selection
+  const handleChecklistSelection = (checklistId) => {
+    const currentPageKey = `page${page}`;
+  
     setSelectedChecklists((prevSelected) => {
       const updatedSelected = { ...prevSelected };
       const currentSelections = updatedSelected[currentPageKey] || [];
-
+  
       if (currentSelections.includes(checklistId)) {
         // Deselect if already selected
         updatedSelected[currentPageKey] = currentSelections.filter(
@@ -147,12 +151,12 @@ const toggleEditMode = () => {
         // Add to selected list
         updatedSelected[currentPageKey] = [...currentSelections, checklistId];
       }
-
+  
       // Remove empty pages to avoid clutter
       if (updatedSelected[currentPageKey]?.length === 0) {
         delete updatedSelected[currentPageKey];
       }
-      console.log("selectedChecklists:: ",selectedChecklists)
+  
       return updatedSelected;
     });
   };
@@ -321,8 +325,8 @@ const toggleEditMode = () => {
   
     setFilteredChecklists(filtered); // Set filtered checklists
       
-   // console.log("checklists ::::: ",checklists);
-    //console.log("filter ::::: ",filtered);
+  // console.log("checklists ::::: ",checklists);
+  //console.log("filter ::::: ",filtered);
   
   }, [checklists, searchTerm]);
 
@@ -571,13 +575,13 @@ const toggleEditMode = () => {
   };
   
   useEffect(() => {
-    console.log("Dropdown Checklists:", dropdownChecklists);
-    console.log("Has More Dropdown Checklists:", hasMoreDropdownChecklists);
+    //console.log("Dropdown Checklists:", dropdownChecklists);
+    //console.log("Has More Dropdown Checklists:", hasMoreDropdownChecklists);
   }, [dropdownChecklists, hasMoreDropdownChecklists]);
 
 
   useEffect(() => {
-    console.log("Dropdown re-render triggered:", dropdownChecklists);
+    //console.log("Dropdown re-render triggered:", dropdownChecklists);
   }, [dropdownChecklists]);
   
   const handleOpenDialog = () => {
@@ -822,59 +826,53 @@ const toggleEditMode = () => {
           className="wrapper-class"
           style={{ display: "flex" ,alignContent: "stretch", alignItems:"center" }}
         >
+
         {/* Top checkbox for selecting all on the current page */}
         <Checkbox
           size="small"
           style={{ cursor: "pointer" }}
           checked={
             selectedChecklists[`page${page}`]?.length ===
-            filteredChecklists.slice(
-              (page - 1) * itemsPerPage,
-              page * itemsPerPage
-            ).length
+            filteredChecklists.length
           }
           indeterminate={
             selectedChecklists[`page${page}`]?.length > 0 &&
             selectedChecklists[`page${page}`]?.length <
-              filteredChecklists.slice(
-                (page - 1) * itemsPerPage,
-                page * itemsPerPage
-              ).length
+              filteredChecklists.length
           }
           onChange={handleSelectAllOnPage}
           icon={<CheckBoxOutlineBlankOutlinedIcon />}
           checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
         />
 
-        {/* Delete icon appears only when there are selected items */}
-        {totalSelectedCount > 0 && (
-          <IconButton
-            color="error"
-            sx={{ marginLeft: 2, position: "relative" }}
-            onClick={handleDeleteSelected}
-          >
-            <DeleteIcon />
-            <Box
-              sx={{
-                position: "absolute",
-                top: "-5px",
-                right: "-5px",
-                backgroundColor: "red",
-                color: "white",
-                borderRadius: "50%",
-                width: "20px",
-                height: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-              }}
-            >
-              {totalSelectedCount}
-            </Box>
-          </IconButton>
-        )}
-
+    {/* Delete icon appears only when there are selected items */}
+    {totalSelectedCount > 0 && (
+      <IconButton
+        color="error"
+        sx={{ marginLeft: 2, position: "relative" }}
+        onClick={handleDeleteSelected}
+      >
+        <DeleteIcon />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "-5px",
+            right: "-5px",
+            backgroundColor: "red",
+            color: "white",
+            borderRadius: "50%",
+            width: "20px",
+            height: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "12px",
+          }}
+        >
+          {totalSelectedCount}
+        </Box>
+      </IconButton>
+    )}
 
           <div  style={{
             display: "flex",
@@ -1002,8 +1000,6 @@ const toggleEditMode = () => {
                           margin: "4px auto",
                           mb: "16px",
                           tableLayout: "fixed",
-                          //maxHeight: 350,
-                        //  overflowY: "auto",
                           border: checklistItems[checklist.id] && checklistItems[checklist.id].length > 0
                                     ? "1px solid #333" // Border when items are present
                                     : "none", // No border when no items
@@ -1341,51 +1337,51 @@ const toggleEditMode = () => {
         {/* --------------------------------------------------*/}
 
         <FormControl fullWidth error={!!checklistSelectError} sx={{ mt: 2 }}>
-      <InputLabel id="checklist-label"  sx={{ backgroundColor: 'white', padding: '0 1mm' }}> Select Checklist </InputLabel>
-      <Select
-        labelId="checklist-label"
-        value={selectedChecklistForItem || ''}
-        onChange={(e) => {
-          setSelectedChecklistForItem(e.target.value);
-          setChecklistSelectError(false);
-        }}
-        displayEmpty
-        open={menuOpen}
-        onOpen={() => setMenuOpen(true)}
-        onClose={(event) => {
-          // Prevent menu closing if the click originates from the "Show More" item
-          if (!event.nativeEvent.stopImmediatePropagationFlag) {
-            setMenuOpen(false);
-          }
-        }}
-        MenuProps={{
-          PaperProps: {
-            style: {
-              maxHeight: '300px',
-              overflowY: 'auto',
-            },
-          },
-        }}
-      >
-        {dropdownChecklists.map((checklist) => (
-          <MenuItem key={checklist.id} value={checklist.id}>
-            {checklist.title}
-          </MenuItem>
-        ))}
-        {hasMoreDropdownChecklists && (
-          <MenuItem
-            onClick={(event) => {
-              event.stopPropagation(); // Prevent default closing behavior
-              event.nativeEvent.stopImmediatePropagationFlag = true; // Prevent menu from closing
-              fetchMoreDropdownChecklists();
+          <InputLabel id="checklist-label"  sx={{ backgroundColor: 'white', padding: '0 1mm' }}> Select Checklist </InputLabel>
+          <Select
+            labelId="checklist-label"
+            value={selectedChecklistForItem || ''}
+            onChange={(e) => {
+              setSelectedChecklistForItem(e.target.value);
+              setChecklistSelectError(false);
+            }}
+            displayEmpty
+            open={menuOpen}
+            onOpen={() => setMenuOpen(true)}
+            onClose={(event) => {
+              // Prevent menu closing if the click originates from the "Show More" item
+              if (!event.nativeEvent.stopImmediatePropagationFlag) {
+                setMenuOpen(false);
+              }
+            }}
+            MenuProps={{
+              PaperProps: {
+                style: {
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                },
+              },
             }}
           >
-            Show More...
-          </MenuItem>
-        )}
-      </Select>
-      {checklistSelectError && <FormHelperText>{checklistSelectError}</FormHelperText>}
-    </FormControl>
+            {dropdownChecklists.map((checklist) => (
+              <MenuItem key={checklist.id} value={checklist.id}>
+                {checklist.title}
+              </MenuItem>
+            ))}
+            {hasMoreDropdownChecklists && (
+              <MenuItem
+                onClick={(event) => {
+                  event.stopPropagation(); // Prevent default closing behavior
+                  event.nativeEvent.stopImmediatePropagationFlag = true; // Prevent menu from closing
+                  fetchMoreDropdownChecklists();
+                }}
+              >
+                Show More...
+              </MenuItem>
+            )}
+          </Select>
+          {checklistSelectError && <FormHelperText>{checklistSelectError}</FormHelperText>}
+        </FormControl>
 
         </DialogContent>
 

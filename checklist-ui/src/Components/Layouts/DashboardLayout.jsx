@@ -59,7 +59,7 @@ useEffect(() => {
     setAnchorEl(null);
   };
 
-  console.log(drawerOpen)
+  //console.log(drawerOpen)
 
   return (
     <ThemeProvider theme={theme}>
