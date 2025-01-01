@@ -41,6 +41,7 @@ const Checklists = () => {
   const [checklists, setChecklists] = useState([]);
   const [filteredChecklists, setFilteredChecklists] = useState([]); // Add filteredChecklists state
   const [loading, setLoading] = useState(true);
+  const [loadingChecklists, setLoadingChecklists] = React.useState(false);
   const [error, setError] = useState("");
   const [openItemModal, setOpenItemModal] = useState(false);
   const [newChecklistItemText, setNewChecklistItemText] = useState("");
@@ -319,7 +320,13 @@ const Checklists = () => {
 
   // Handle page change
   const handleChangePage = (event, newPage) => {
+    setLoadingChecklists(true);
     setPage(newPage);
+  
+    // Simulate fetching data or call your API here
+    fetchChecklists(newPage).then(() => {
+      setLoadingChecklists(false);
+    });
   };
 
   const handleCheckboxChange = async (checklistId, itemId) => {
@@ -910,7 +917,18 @@ const Checklists = () => {
 
         <>
         
-          {filteredChecklists.length > 0 ? (
+          {loadingChecklists ? (
+            // Show skeleton loaders while checklists are being fetched
+            Array.from({ length: 10 }).map((_, index) => (
+              <Skeleton 
+                key={index}
+                variant="rectangular"
+                height={20} 
+                width="100%"
+                sx={{ margin: "8px 0", borderRadius: "4px" }}
+              />
+            ))
+          ) : filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
               <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
                 {/* Checkbox placed outside the Accordion */}
@@ -1109,7 +1127,7 @@ const Checklists = () => {
                                   )
                                 )}
                               </TableBody>
-                            </Table>
+                             </Table>
                            </Box>
 
                               <Box
