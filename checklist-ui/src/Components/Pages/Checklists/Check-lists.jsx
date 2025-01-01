@@ -44,7 +44,6 @@ const Checklists = () => {
   const [error, setError] = useState("");
   const [openItemModal, setOpenItemModal] = useState(false);
   const [newChecklistItemText, setNewChecklistItemText] = useState("");
-  const [selectedChecklistId] = useState(null);
   const [selectedChecklistForItem, setSelectedChecklistForItem] = useState(null);
   const [titleError, setTitleError] = useState(false);
   const [itemTextError, setItemTextError] = useState(false);
@@ -64,21 +63,17 @@ const Checklists = () => {
   // Pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10); // Adjust items per page as needed
-
   const [totalPages, setTotalPages] = useState(0);
   const [paginationState, setPaginationState] = useState({}); // Manage pagination per checklist
   //console.log(paginationState)
-
   const [searchParams] = useSearchParams(); // Get URL search params
   const searchTerm = searchParams.get("search")?.toLowerCase() || ""; // Get search term and convert to lowercase
-
   const [openModal, setOpenModal] = useState(false);
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
 
   //Multiple delete
   const [selectedChecklistsByPage, setSelectedChecklistsByPage] = React.useState({});
-  const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [isEditMode, setIsEditMode] = useState(false);  
   const [selectedChecklists, setSelectedChecklists] = useState({});
   const [isPageSelectAll, setIsPageSelectAll] = useState(false);
     // Pagination state and logic
@@ -90,19 +85,9 @@ const Checklists = () => {
   const [dropdownChecklists, setDropdownChecklists] = useState([]);
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
   const [hasMoreDropdownChecklists, setHasMoreDropdownChecklists] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Manage the dropdown open state
   const [menuOpen, setMenuOpen] = useState(false);
 
   const totalSelectedCount = Object.values(selectedChecklists).flat().length;
- // Handle toggling edit mode
-const toggleEditMode = () => {
-  setIsEditMode((prevIsEditMode) => {
-    if (prevIsEditMode) {
-      setSelectedChecklists({}); // Clear all selections when exiting edit mode
-    }
-    return !prevIsEditMode;
-  });
-};
 
   // Handle "Select All" on the current page
   const handleSelectAllOnPage = () => {
@@ -133,7 +118,7 @@ const toggleEditMode = () => {
     return updatedSelected;
   });
 };
-// console.log("selectedChecklists++++++ ",selectedChecklists)
+  // console.log("selectedChecklists++++++ ",selectedChecklists)
   // Handle individual checklist selection
   const handleChecklistSelection = (checklistId) => {
     const currentPageKey = `page${page}`;
@@ -160,6 +145,7 @@ const toggleEditMode = () => {
       return updatedSelected;
     });
   };
+
   // Handle deletion of selected checklists
   const handleDeleteSelected = async () => {
     const allSelectedIds = Object.values(selectedChecklists).flat();
@@ -195,6 +181,7 @@ const toggleEditMode = () => {
       toast.error(error.response?.data?.error || "Failed to delete checklists.");
     }
   };
+
   // Paginate checklists
   const paginatedChecklists = React.useMemo(() => {
     const startIndex = (page - 1) * itemsPerPage;
@@ -579,11 +566,6 @@ const toggleEditMode = () => {
     //console.log("Has More Dropdown Checklists:", hasMoreDropdownChecklists);
   }, [dropdownChecklists, hasMoreDropdownChecklists]);
 
-
-  useEffect(() => {
-    //console.log("Dropdown re-render triggered:", dropdownChecklists);
-  }, [dropdownChecklists]);
-  
   const handleOpenDialog = () => {
     setOpenDialog(true);
     setNewItemText("");
@@ -844,35 +826,34 @@ const toggleEditMode = () => {
           icon={<CheckBoxOutlineBlankOutlinedIcon />}
           checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
         />
-
-    {/* Delete icon appears only when there are selected items */}
-    {totalSelectedCount > 0 && (
-      <IconButton
-        color="error"
-        sx={{ marginLeft: 2, position: "relative" }}
-        onClick={handleDeleteSelected}
-      >
-        <DeleteIcon />
-        <Box
-          sx={{
-            position: "absolute",
-            top: "-5px",
-            right: "-5px",
-            backgroundColor: "red",
-            color: "white",
-            borderRadius: "50%",
-            width: "20px",
-            height: "20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "12px",
-          }}
-        >
-          {totalSelectedCount}
-        </Box>
-      </IconButton>
-    )}
+          {/* Delete icon appears only when there are selected items */}
+          {totalSelectedCount > 0 && (
+            <IconButton
+              color="error"
+              sx={{ marginLeft: 2, position: "relative" }}
+              onClick={handleDeleteSelected}
+            >
+              <DeleteIcon />
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "-5px",
+                  right: "-5px",
+                  backgroundColor: "red",
+                  color: "white",
+                  borderRadius: "50%",
+                  width: "20px",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                }}
+              >
+                {totalSelectedCount}
+              </Box>
+            </IconButton>
+          )}
 
           <div  style={{
             display: "flex",
@@ -939,8 +920,7 @@ const toggleEditMode = () => {
               selectedChecklists[`page${page}`]?.includes(checklist.id) || false
             }
             onChange={() => handleChecklistSelection(checklist.id)}
-          />
-                
+          />                
 
                 <Accordion
                 key={checklist.id}
@@ -1132,19 +1112,12 @@ const toggleEditMode = () => {
                             </Table>
                            </Box>
 
-
                               <Box
                               sx={{
-                                position: "sticky", 
-                                bottom: 0,
-                                backgroundColor: "#fff", 
-                                zIndex: 1, 
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                padding: "8px",
-                                borderTop: "1px solid #ccc", 
+                                position: "sticky", bottom: 0, backgroundColor: "#fff", zIndex: 1, display: "flex",
+                                justifyContent: "center", alignItems: "center", padding: "8px", borderTop: "1px solid #ccc", 
                                 }}>
+
                                 <Pagination
                                   variant="outlined"
                                   count={paginationState[checklist.id]?.totalPages || 1}
@@ -1154,8 +1127,7 @@ const toggleEditMode = () => {
                                   }
                                 />
                               </Box>
-                          </Box>
-                          
+                          </Box>            
                         ) : (
                           <Box
                             sx={{
@@ -1227,8 +1199,7 @@ const toggleEditMode = () => {
           <Pagination variant="outlined"
             count={totalPages}
             page={page}
-            onChange={handleChangePage}
-            
+            onChange={handleChangePage}            
           />
         </Box>
       </Box>
