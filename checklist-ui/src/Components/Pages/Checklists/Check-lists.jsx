@@ -4,11 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import {
   Accordion, AccordionSummary, AccordionDetails, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Divider, Skeleton,  
-  LinearProgress, Pagination, IconButton, FormHelperText, Select,
-} from "@mui/material";
+  LinearProgress, Pagination, IconButton, FormHelperText, Select, Menu} from "@mui/material";
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
 import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
 
@@ -189,6 +189,83 @@ const Checklists = () => {
     return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredChecklists, page]);
   
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMenuSelect = (option) => {
+    // Perform actions based on the selected option
+    if(option == 'all'){
+      handleSelectAllOnPage();
+      // Delete checklists
+    }
+    else if (option == 'none')
+    {
+      handleSelectAllOnPage();
+    }
+  };
+
   // handle accordion changes
   const handleAccordionChange = (panelId) => async () => {
     setExpandedAccordions((prev) =>
@@ -288,6 +365,7 @@ const Checklists = () => {
       setLoading(false);
     }
   };
+
   // UseEffect for fetching checklists
   useEffect(() => {
     fetchChecklists();
@@ -818,49 +896,73 @@ const Checklists = () => {
 
         {/* Top checkbox for selecting all on the current page */}
         <Checkbox
-          size="small"
-          style={{ cursor: "pointer" }}
-          checked={
-            selectedChecklists[`page${page}`]?.length ===
-            filteredChecklists.length
-          }
-          indeterminate={
-            selectedChecklists[`page${page}`]?.length > 0 &&
-            selectedChecklists[`page${page}`]?.length <
-              filteredChecklists.length
-          }
-          onChange={handleSelectAllOnPage}
-          icon={<CheckBoxOutlineBlankOutlinedIcon />}
-          checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
-        />
-          {/* Delete icon appears only when there are selected items */}
-          {totalSelectedCount > 0 && (
-            <IconButton
-              color="error"
-              sx={{ marginLeft: 2, position: "relative" }}
-              onClick={handleDeleteSelected}
+        size="small"
+        style={{ cursor: "pointer" }}
+        checked={
+          selectedChecklists[`page${page}`]?.length === filteredChecklists.length
+        }
+        indeterminate={
+          selectedChecklists[`page${page}`]?.length > 0 &&
+          selectedChecklists[`page${page}`]?.length < filteredChecklists.length
+        }
+        onChange={handleSelectAllOnPage}
+        icon={<CheckBoxOutlineBlankOutlinedIcon />}
+        checkedIcon={<IndeterminateCheckBoxOutlinedIcon sx={{ color: "black" }} />}
+       />
+
+      {/* Dropdown icon for menu */}
+      <IconButton onClick={handleMenuClick}>
+        <ArrowDropDownIcon />
+      </IconButton>
+
+      {/* Dropdown menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+      >
+        <MenuItem onClick={(handleSelectAllOnPage) => handleMenuSelect("all")}>All</MenuItem>
+        <MenuItem onClick={() => handleMenuSelect("none")}>None</MenuItem>
+        <MenuItem onClick={() => handleMenuSelect("starred")}>Starred</MenuItem>
+        <MenuItem onClick={() => handleMenuSelect("unstarred")}>Unstarred</MenuItem>
+      </Menu>
+
+        {/* Delete icon appears only when there are selected items */}
+        {totalSelectedCount > 0 && (
+          <IconButton
+            color="error"
+            sx={{ marginLeft: 2, position: "relative" }}
+            onClick={handleDeleteSelected}
+          >
+            <DeleteIcon />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "-5px",
+                right: "-5px",
+                backgroundColor: "red",
+                color: "white",
+                borderRadius: "50%",
+                width: "20px",
+                height: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+              }}
             >
-              <DeleteIcon />
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "-5px",
-                  right: "-5px",
-                  backgroundColor: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "12px",
-                }}
-              >
-                {totalSelectedCount}
-              </Box>
-            </IconButton>
-          )}
+              {totalSelectedCount}
+            </Box>
+          </IconButton>
+        )}
 
           <div  style={{
             display: "flex",
@@ -917,8 +1019,8 @@ const Checklists = () => {
 
         <>
         
+          {/* Show skeleton loaders while checklists are being fetched */}
           {loadingChecklists ? (
-            // Show skeleton loaders while checklists are being fetched
             Array.from({ length: 10 }).map((_, index) => (
               <Skeleton 
                 key={index}
@@ -933,12 +1035,12 @@ const Checklists = () => {
               <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
                 {/* Checkbox placed outside the Accordion */}
                 <Checkbox
-            size="small"
-            checked={
-              selectedChecklists[`page${page}`]?.includes(checklist.id) || false
-            }
-            onChange={() => handleChecklistSelection(checklist.id)}
-          />                
+                  size="small"
+                  checked={
+                    selectedChecklists[`page${page}`]?.includes(checklist.id) || false
+                  }
+                  onChange={() => handleChecklistSelection(checklist.id)}
+                />                
 
                 <Accordion
                 key={checklist.id}
@@ -1225,7 +1327,12 @@ const Checklists = () => {
       {/* Checklist creation modal */}
       <Dialog
         open={openModal}
-        onClose={handleCloseModal}
+        onClose={(event, reason) => {
+          // Prevent the dialog from closing when clicking outside or pressing Escape
+          if (reason && reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            handleCloseModal();
+          }
+        }}
         fullWidth
         maxWidth="sm"
       >
@@ -1288,7 +1395,12 @@ const Checklists = () => {
       {/* Checklist item creation modal */}
       <Dialog
         open={openItemModal}
-        onClose={handleCloseItemModal}
+        onClose={(event, reason) => {
+          // Prevent the dialog from closing when clicking outside or pressing Escape
+          if (reason && reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            handleCloseItemModal();
+          }
+        }}
         fullWidth
         maxWidth="sm"
       >
@@ -1322,9 +1434,7 @@ const Checklists = () => {
             error={!!itemTextError}
             helperText={itemTextError}
           />
-   
-        {/* --------------------------------------------------*/}
-
+ 
         <FormControl fullWidth error={!!checklistSelectError} sx={{ mt: 2 }}>
           <InputLabel id="checklist-label"  sx={{ backgroundColor: 'white', padding: '0 1mm' }}> Select Checklist </InputLabel>
           <Select
@@ -1390,7 +1500,12 @@ const Checklists = () => {
       {/* Individual Checklist item creation modal */}
       <Dialog
         open={openDialog}
-        onClose={handleCloseDialog}
+        onClose={(event, reason) => {
+          // Prevent the dialog from closing when clicking outside or pressing Escape
+          if (reason && reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            handleCloseDialog();
+          }
+        }}
         fullWidth
         maxWidth="sm"
       >
@@ -1437,7 +1552,15 @@ const Checklists = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={openEditDialog} onClose={CloseDialog}  fullWidth maxWidth="sm">
+      <Dialog open={openEditDialog} 
+      onClose={(event, reason) => {
+        // Prevent the dialog from closing when clicking outside or pressing Escape
+        if (reason && reason !== "backdropClick" && reason !== "escapeKeyDown") {
+          CloseDialog();
+        }
+      }} 
+      fullWidth 
+      maxWidth="sm">
       <div>
           <DialogTitle
             sx={{
@@ -1471,7 +1594,7 @@ const Checklists = () => {
       </Dialog>
 
       <ToastContainer />
-      {/* Pagination component */} 
+      
     </ThemeProvider>
   );
 };
