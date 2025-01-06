@@ -2,7 +2,7 @@ from MySQLdb import IntegrityError
 from django.forms import ValidationError
 from django.shortcuts import render
 from django.http import Http404
-
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -71,6 +71,41 @@ class ChecklistsApiViews(ListCreateAPIView):
             {"message": f"{deleted_count} checklists deleted successfully."},
             status=status.HTTP_200_OK,
         )
+    
+""" @action(detail=True, methods=['patch'], url_path='toggle-starred')
+    def toggle_starred(self, request, pk=None):
+        try:
+            checklist = CheckList.objects.get(id=pk, user=request.user)
+            checklist.is_starred = not checklist.is_starred
+            checklist.save()
+            return Response(
+                {"message": f"Checklist {checklist.title} starred status updated."},
+                status=status.HTTP_200_OK
+            )
+        except CheckList.DoesNotExist:
+            return Response(
+                {"error": "Checklist not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )"""
+
+
+class ToggleStarredApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, id):
+        try:
+            checklist = CheckList.objects.get(id=id, user=request.user)
+            checklist.is_starred = not checklist.is_starred
+            checklist.save()
+            return Response(
+                {"message": f"Checklist '{checklist.title}' starred status updated."},
+                status=status.HTTP_200_OK
+            )
+        except CheckList.DoesNotExist:
+            return Response(
+                {"error": "Checklist not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 # class to check single id of checklist

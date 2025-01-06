@@ -8,6 +8,7 @@ class CheckList(models.Model):
     title = models.CharField(max_length=100)
     is_deleted = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
+    is_starred = models.BooleanField(default=False) 
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

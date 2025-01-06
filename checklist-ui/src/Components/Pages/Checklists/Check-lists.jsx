@@ -7,11 +7,11 @@ import {
   LinearProgress, Pagination, IconButton, FormHelperText, Select, Menu} from "@mui/material";
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-
+import StarIcon from '@mui/icons-material/Star';
+import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import IndeterminateCheckBoxOutlinedIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
 import CheckBoxOutlineBlankOutlinedIcon from "@mui/icons-material/CheckBoxOutlineBlankOutlined";
-
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast, ToastContainer } from "react-toastify";
@@ -188,6 +188,28 @@ const Checklists = () => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredChecklists.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredChecklists, page]);
+
+  const toggleStarred = async (id) => {
+    try {
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/api/checklists/${id}/starred`, 
+        null, 
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      console.log("SUCCESS");
+      toast.success("starred status updated successfully! ");
+      // Refresh the list or update state to reflect the change
+      fetchChecklists();
+    } catch (error) {
+      console.error("Failed to update starred status:", error);
+      toast.error("Failed to update starred status");
+    }
+  };
+  
   
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -197,59 +219,6 @@ const Checklists = () => {
     setAnchorEl(event.currentTarget);
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -1042,6 +1011,32 @@ const Checklists = () => {
                   onChange={() => handleChecklistSelection(checklist.id)}
                 />                
 
+
+                {checklist.is_starred ? 
+                  <StarIcon
+                  style={{ 
+                    color:  "gold" , 
+                    margin: "0 8px", 
+                    cursor: "pointer" 
+                  }}
+                  onClick={() => toggleStarred(checklist.id)}/> 
+                : <StarOutlineIcon style={{ 
+                    color:  "grey", 
+                    margin: "0 8px", 
+                    cursor: "pointer" 
+                  }}
+                  onClick={() => toggleStarred(checklist.id)}/>  
+                }
+                {/*<StarOutlineIcon
+                  style={{ 
+                    color: checklist.is_starred ? "gold" : "grey", 
+                    margin: "0 8px", 
+                    cursor: "pointer" 
+                  }}
+                  onClick={() => toggleStarred(checklist.id)}
+                />*/}
+                
+
                 <Accordion
                 key={checklist.id}
                 onChange={handleAccordionChange(checklist.id)}
@@ -1307,6 +1302,7 @@ const Checklists = () => {
                 </AccordionDetails>
               </Accordion>
               </div>
+
             ))
           ) : (
             <Typography variant="h6" align="center" sx={{ margin: 2 }}>
