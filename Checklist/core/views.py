@@ -98,7 +98,9 @@ class ToggleStarredApiView(APIView):
             checklist.is_starred = not checklist.is_starred
             checklist.save()
             return Response(
-                {"message": f"Checklist '{checklist.title}' starred status updated."},
+                {"message": f"Checklist '{checklist.title}' starred status updated.",
+                 "is_starred": checklist.is_starred},
+                
                 status=status.HTTP_200_OK
             )
         except CheckList.DoesNotExist:
@@ -113,7 +115,7 @@ class ChecklistApiViews(RetrieveUpdateDestroyAPIView):
     serializer_class = CheckListSerializer
     permission_classes = [IsAuthenticated, isOwner]
 
-    '''Retrive, Update, Delete'''
+    '''Retrieve, Update, Delete'''
 
     def get_queryset(self):
         # Return the filtered queryset directly

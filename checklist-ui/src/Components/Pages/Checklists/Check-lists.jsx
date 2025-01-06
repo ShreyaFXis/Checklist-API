@@ -39,6 +39,7 @@ const theme = createTheme({
 
 const Checklists = () => {
   const [checklists, setChecklists] = useState([]);
+  //console.log("checklists :: ",checklists)
   const [filteredChecklists, setFilteredChecklists] = useState([]); // Add filteredChecklists state
   const [loading, setLoading] = useState(true);
   const [loadingChecklists, setLoadingChecklists] = React.useState(false);
@@ -90,6 +91,39 @@ const Checklists = () => {
 
   const totalSelectedCount = Object.values(selectedChecklists).flat().length;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   // Handle "Select All" on the current page
   const handleSelectAllOnPage = () => {
   const currentPageKey = `page${page}`;
@@ -118,12 +152,32 @@ const Checklists = () => {
   // console.log("selectedChecklists:: ",selectedChecklists)
     return updatedSelected;
   });
-};
+  };
+
+  const handleSelectAllFromMenu = () => {
+    const currentPageKey = `page${page}`;
+    const currentPageChecklists = filteredChecklists.slice(
+      (page - 1) * itemsPerPage,
+      page * itemsPerPage
+    );
+    const currentIds = currentPageChecklists.map((item) => item.id);
+  
+    setSelectedChecklists((prevSelected) => {
+      const updatedSelected = { ...prevSelected };
+  
+      // Always select all checklists on the current page
+      updatedSelected[currentPageKey] = currentIds;
+  
+      return updatedSelected;
+    });
+  };
+  
+  
   // console.log("selectedChecklists++++++ ",selectedChecklists)
   // Handle individual checklist selection
   const handleChecklistSelection = (checklistId) => {
     const currentPageKey = `page${page}`;
-  
+
     setSelectedChecklists((prevSelected) => {
       const updatedSelected = { ...prevSelected };
       const currentSelections = updatedSelected[currentPageKey] || [];
@@ -209,7 +263,6 @@ const Checklists = () => {
       toast.error("Failed to update starred status");
     }
   };
-  
   
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -898,7 +951,7 @@ const Checklists = () => {
           horizontal: "left",
         }}
       >
-        <MenuItem onClick={(handleSelectAllOnPage) => handleMenuSelect("all")}>All</MenuItem>
+        <MenuItem onClick={() => handleSelectAllFromMenu()}>All</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("none")}>None</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("starred")}>Starred</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("unstarred")}>Unstarred</MenuItem>
