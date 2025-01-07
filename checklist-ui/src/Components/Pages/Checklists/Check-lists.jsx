@@ -81,8 +81,7 @@ const Checklists = () => {
     // Pagination state and logic
   const [currentPage, setCurrentPage] = useState(1);
   const allChecklistIds = checklists.map((checklist) => checklist.id); // Get all IDs
-  
-  const [hasMoreChecklists, setHasMoreChecklists] = useState(true);
+
   // State for dropdown-specific checklists
   const [dropdownChecklists, setDropdownChecklists] = useState([]);
   const [currentDropdownPage, setCurrentDropdownPage] = useState(1);
@@ -90,39 +89,6 @@ const Checklists = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const totalSelectedCount = Object.values(selectedChecklists).flat().length;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   
   // Handle "Select All" on the current page
   const handleSelectAllOnPage = () => {
@@ -154,25 +120,50 @@ const Checklists = () => {
   });
   };
 
+  // Handle "Select All" from the menu (selects all items on the current page and prevents unselecting)
   const handleSelectAllFromMenu = () => {
     const currentPageKey = `page${page}`;
     const currentPageChecklists = filteredChecklists.slice(
       (page - 1) * itemsPerPage,
       page * itemsPerPage
     );
-    const currentIds = currentPageChecklists.map((item) => item.id);
-  
+    const currentIds = filteredChecklists.map((item) => item.id);
+
     setSelectedChecklists((prevSelected) => {
       const updatedSelected = { ...prevSelected };
-  
-      // Always select all checklists on the current page
-      updatedSelected[currentPageKey] = currentIds;
-  
+
+      // Add current page's selected items to the selection
+      if (!updatedSelected[currentPageKey]) {
+        updatedSelected[currentPageKey] = currentIds;
+      } else {
+        // Ensure previously selected items on this page remain selected
+        updatedSelected[currentPageKey] = Array.from(
+          new Set([...updatedSelected[currentPageKey], ...currentIds])
+        );
+      }
+
       return updatedSelected;
     });
   };
+
+  // Handle "Deselect All" on the current page
+  const handleSelectNoneOnPage = () => {
+    setSelectedChecklists({});
+  };
+
+  // Handle "Starred/Unstarred" on the current page
+  const handleSelectByStarredStatus = (isStarred) => {
+    const selectedIds = filteredChecklists
+      .filter((checklist) => checklist.is_starred === isStarred)
+      .map((checklist) => checklist.id);
   
+    setSelectedChecklists((prevSelected) => ({
+      ...prevSelected,
+      [`page${page}`]: selectedIds,
+    }));
+  };
   
+    
   // console.log("selectedChecklists++++++ ",selectedChecklists)
   // Handle individual checklist selection
   const handleChecklistSelection = (checklistId) => {
@@ -254,10 +245,14 @@ const Checklists = () => {
           },
         }
       );
-      console.log("SUCCESS");
-      toast.success("starred status updated successfully! ");
-      // Refresh the list or update state to reflect the change
-      fetchChecklists();
+      // Update the specific checklist's state
+      setChecklists((prevChecklists) =>
+        prevChecklists.map((checklist) =>
+          checklist.id === id ? { ...checklist, is_starred: response.data.is_starred } : checklist
+        )
+      );
+  
+      toast.success("Starred status updated successfully!");
     } catch (error) {
       console.error("Failed to update starred status:", error);
       toast.error("Failed to update starred status");
@@ -277,15 +272,16 @@ const Checklists = () => {
   };
 
   const handleMenuSelect = (option) => {
-    // Perform actions based on the selected option
-    if(option == 'all'){
-      handleSelectAllOnPage();
-      // Delete checklists
+    if (option === "all") {
+      handleSelectAllFromMenu(); // Always select all
+    } else if (option === "none") {
+      handleSelectNoneOnPage(); // Deselect all on the current page
+    } else if (option === "starred") {
+      handleSelectByStarredStatus(true); // Select starred checklists
+    } else if (option === "unstarred") {
+      handleSelectByStarredStatus(false); // Select unstarred checklists
     }
-    else if (option == 'none')
-    {
-      handleSelectAllOnPage();
-    }
+
   };
 
   // handle accordion changes
@@ -370,7 +366,7 @@ const Checklists = () => {
       }
       //console.log(page);
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
+        `http://127.0.0.1:8000/api/checklists?page=${page}`, //remooooved titles_only=true
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -519,7 +515,7 @@ const Checklists = () => {
 
        // Refetch data for the current page
        const updatedResponse = await axios.get(
-        `http://127.0.0.1:8000/api/checklists?page=${page}&titles_only=true`,
+        `http://127.0.0.1:8000/api/checklists?page=${page}`, //remooooved titles_only=true
         { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -638,7 +634,7 @@ const Checklists = () => {
   
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}&titles_only=true`,
+        `http://127.0.0.1:8000/api/checklists?page=${currentDropdownPage}`, //remooooved titles_only=true
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -951,7 +947,7 @@ const Checklists = () => {
           horizontal: "left",
         }}
       >
-        <MenuItem onClick={() => handleSelectAllFromMenu()}>All</MenuItem>
+        <MenuItem onClick={() => handleMenuSelect("all")}>All</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("none")}>None</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("starred")}>Starred</MenuItem>
         <MenuItem onClick={() => handleMenuSelect("unstarred")}>Unstarred</MenuItem>
@@ -1054,7 +1050,11 @@ const Checklists = () => {
             ))
           ) : filteredChecklists.length > 0 ? (
             filteredChecklists.map((checklist) => (
-              <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row"}}>
+              <div key={checklist.id} style={{ marginBottom: "0",display:"flex", flexDirection: "row" ,
+                //backgroundColor: selectedChecklists[`page${page}`]?.includes(checklist.id)
+                //  ? "rgba(255, 223, 0, 0.2)"
+                 // : "transparent",
+              }}>
                 {/* Checkbox placed outside the Accordion */}
                 <Checkbox
                   size="small"
@@ -1064,22 +1064,22 @@ const Checklists = () => {
                   onChange={() => handleChecklistSelection(checklist.id)}
                 />                
 
-
                 {checklist.is_starred ? 
                   <StarIcon
                   style={{ 
                     color:  "gold" , 
-                    margin: "0 8px", 
+                    margin: "8px 8px", 
                     cursor: "pointer" 
                   }}
                   onClick={() => toggleStarred(checklist.id)}/> 
                 : <StarOutlineIcon style={{ 
                     color:  "grey", 
-                    margin: "0 8px", 
+                    margin: "8px 8px", 
                     cursor: "pointer" 
                   }}
                   onClick={() => toggleStarred(checklist.id)}/>  
                 }
+
                 {/*<StarOutlineIcon
                   style={{ 
                     color: checklist.is_starred ? "gold" : "grey", 

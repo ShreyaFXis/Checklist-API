@@ -33,7 +33,7 @@ class ChecklistsApiViews(ListCreateAPIView):
 
     def get_queryset(self):
         # Return the filtered queryset directly
-        # print("is create")
+        # print("is create ")
         return CheckList.objects.filter(user=self.request.user)
      
     def get_serializer_context(self):
@@ -72,6 +72,8 @@ class ChecklistsApiViews(ListCreateAPIView):
             status=status.HTTP_200_OK,
         )
     
+
+
 """ @action(detail=True, methods=['patch'], url_path='toggle-starred')
     def toggle_starred(self, request, pk=None):
         try:
@@ -87,6 +89,8 @@ class ChecklistsApiViews(ListCreateAPIView):
                 {"error": "Checklist not found."},
                 status=status.HTTP_404_NOT_FOUND
             )"""
+
+
 
 
 class ToggleStarredApiView(APIView):
@@ -108,6 +112,9 @@ class ToggleStarredApiView(APIView):
                 {"error": "Checklist not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+
 
 
 # class to check single id of checklist
